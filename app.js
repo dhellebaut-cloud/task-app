@@ -37,8 +37,94 @@ function renderAll() {
   renderList();
   setFilter(activeFilter);
   renderProfileBar();
+  renderLinksShelf();
   document.getElementById('date-bar').textContent =
     new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+/* ── Links shelf ── */
+function shortenUrl(url) {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, '');
+    const parts = u.pathname.split('/').filter(Boolean);
+    const path = parts.length ? '/' + parts.slice(0, 2).join('/') : '';
+    const short = host + path;
+    return short.length > 50 ? short.slice(0, 48) + '…' : short;
+  } catch { return url; }
+}
+
+function renderLinksShelf() {
+  const shelf = document.getElementById('links-shelf');
+  if (!shelf) return;
+
+  const faviconRow = links.map(l => {
+    let domain = '';
+    try { domain = new URL(l.url).hostname; } catch {}
+    const short = shortenUrl(l.url);
+    return `<div class="lshelf-item">
+      <img class="lshelf-fav" src="https://www.google.com/s2/favicons?domain=${domain}&sz=32" onerror="this.style.display='none'" />
+      <a class="lshelf-link" href="${l.url}" target="_blank" rel="noopener noreferrer">${esc(short)}</a>
+      <button class="lshelf-del" onclick="deleteLink('${l.id}')" title="Remove">×</button>
+    </div>`;
+  }).join('');
+
+  shelf.innerHTML = `
+    <div class="lshelf-hdr" onclick="toggleLinksShelf()">
+      <svg class="lshelf-arrow${linksExpanded ? ' open' : ''}" width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><path d="M1.5 2.5l2.5 3 2.5-3"/></svg>
+      <span class="lshelf-title">Links</span>
+      ${links.length ? `<span class="lshelf-count">${links.length}</span>` : ''}
+      <button class="lshelf-add-btn" onclick="event.stopPropagation();openLinksAdd()" title="Add link">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="lshelf-add-row" id="lshelf-add-row" style="display:${linksAddOpen ? 'flex' : 'none'}">
+      <input type="url" id="lshelf-input" class="lshelf-input" placeholder="Paste a URL..."
+             onkeydown="if(event.key==='Enter')submitLink();if(event.key==='Escape')closeLinksAdd()" />
+      <button class="lshelf-submit" onclick="submitLink()">Add</button>
+    </div>
+    ${linksExpanded && links.length ? `<div class="lshelf-list">${faviconRow}</div>` : ''}
+    ${linksExpanded && !links.length ? `<div class="lshelf-empty">No links yet — click + to add one</div>` : ''}
+  `;
+
+  if (linksAddOpen) {
+    const inp = document.getElementById('lshelf-input');
+    if (inp) inp.focus();
+  }
+}
+
+function toggleLinksShelf() {
+  linksExpanded = !linksExpanded;
+  renderLinksShelf();
+}
+
+function openLinksAdd() {
+  linksAddOpen = true;
+  if (!linksExpanded) linksExpanded = true;
+  renderLinksShelf();
+}
+
+function closeLinksAdd() {
+  linksAddOpen = false;
+  renderLinksShelf();
+}
+
+function submitLink() {
+  const inp = document.getElementById('lshelf-input');
+  if (!inp) return;
+  let url = inp.value.trim();
+  if (!url) return;
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  links.unshift({ id: 'l' + Date.now(), url, added: new Date().toISOString() });
+  linksAddOpen = false;
+  persist();
+  renderLinksShelf();
+}
+
+function deleteLink(id) {
+  links = links.filter(l => l.id !== id);
+  persist();
+  renderLinksShelf();
 }
 
 /* ── Colour palette ── */
@@ -67,6 +153,9 @@ let selSettingsGroupColor  = 'purple';
 let selSettingsPeopleColor = 'purple';
 let profile                = { name: '', emoji: '', slackWebhook: '', slackTeamId: '' };
 let people                 = [];
+let links                  = [];
+let linksExpanded          = false;
+let linksAddOpen           = false;
 let activeSettingsSection  = 'general';
 let prioChecked  = false;    // state of priority checkbox in popup
 let dueSel       = '';       // '' | 'today' | 'week' | 'date'
@@ -78,6 +167,7 @@ function persist() {
     localStorage.setItem('tasks-app:groups',  JSON.stringify(groups));
     localStorage.setItem('tasks-app:people',  JSON.stringify(people));
     localStorage.setItem('tasks-app:profile', JSON.stringify(profile));
+    localStorage.setItem('tasks-app:links',   JSON.stringify(links));
     localStorage.setItem('tasks-app:nextId',  String(nextId));
   } catch (_) { /* storage unavailable */ }
 }
@@ -89,10 +179,12 @@ function loadFromStorage() {
     const n = localStorage.getItem('tasks-app:nextId');
     const pe = localStorage.getItem('tasks-app:people');
     const pr = localStorage.getItem('tasks-app:profile');
+    const li = localStorage.getItem('tasks-app:links');
     if (t)  tasks   = JSON.parse(t);
     if (g)  groups  = JSON.parse(g);
     if (pe) people  = JSON.parse(pe);
     if (pr) profile = JSON.parse(pr);
+    if (li) links   = JSON.parse(li);
     if (n)  nextId  = parseInt(n, 10) || 1;
   } catch (_) { /* ignore corrupt data */ }
 }
@@ -453,7 +545,7 @@ function saveProfile() {
 
 /* ── Export / Import ── */
 function exportData() {
-  const payload = JSON.stringify({ tasks, groups, people, profile, nextId }, null, 2);
+  const payload = JSON.stringify({ tasks, groups, people, profile, links, nextId }, null, 2);
   const blob = new Blob([payload], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -477,6 +569,7 @@ function importData() {
         if (d.groups)  groups  = d.groups;
         if (d.people)  people  = d.people;
         if (d.profile) profile = d.profile;
+        if (d.links)   links   = d.links;
         if (d.nextId)  nextId  = d.nextId;
         persist();
         renderAll();
