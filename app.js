@@ -44,19 +44,26 @@ let syncTimer    = null;
 
 async function initAuth() {
   try {
-    // Register listener FIRST so we never miss an event from the OAuth redirect
+    // Register listener FIRST to catch future events (token refresh, sign out)
     db.auth.onAuthStateChange(async (event, session) => {
       console.log('[Auth] event:', event, session?.user?.email || 'no user');
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user && !currentUser) {
+      if (event === 'SIGNED_IN' && session?.user && !currentUser) {
         await onSignIn(session.user);
-      } else if (event === 'INITIAL_SESSION' && !session?.user && !currentUser) {
-        showLoginScreen();
       } else if (event === 'SIGNED_OUT') {
         onSignOut();
       }
     });
+
+    // getSession() handles the OAuth code exchange — this is the primary sign-in trigger
+    const { data: { session }, error } = await db.auth.getSession();
+    console.log('[Auth] getSession:', session?.user?.email || 'no session', error || '');
+    if (session?.user && !currentUser) {
+      await onSignIn(session.user);
+    } else if (!session?.user && !currentUser) {
+      showLoginScreen();
+    }
   } catch (err) {
-    console.error('Auth error:', err);
+    console.error('[Auth] init error:', err);
     showLoginScreen();
   }
 }
