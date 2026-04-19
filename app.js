@@ -44,7 +44,7 @@ let syncTimer    = null;
 
 async function initAuth() {
   try {
-    // Register listener FIRST to catch future events (token refresh, sign out)
+    // Register listener for future events (token refresh, sign out)
     db.auth.onAuthStateChange(async (event, session) => {
       console.log('[Auth] event:', event, session?.user?.email || 'no user');
       if (event === 'SIGNED_IN' && session?.user && !currentUser) {
@@ -54,9 +54,22 @@ async function initAuth() {
       }
     });
 
-    // getSession() handles the OAuth code exchange — this is the primary sign-in trigger
+    // If returning from OAuth redirect, explicitly exchange the code
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('code')) {
+      console.log('[Auth] OAuth code detected, exchanging...');
+      const { data, error } = await db.auth.exchangeCodeForSession(window.location.href);
+      console.log('[Auth] exchange result:', data?.session?.user?.email || 'no session', error?.message || '');
+      if (data?.session?.user && !currentUser) {
+        window.history.replaceState({}, '', window.location.pathname);
+        await onSignIn(data.session.user);
+        return;
+      }
+    }
+
+    // Normal session check (already logged in)
     const { data: { session }, error } = await db.auth.getSession();
-    console.log('[Auth] getSession:', session?.user?.email || 'no session', error || '');
+    console.log('[Auth] getSession:', session?.user?.email || 'no session', error?.message || '');
     if (session?.user && !currentUser) {
       await onSignIn(session.user);
     } else if (!session?.user && !currentUser) {
@@ -74,7 +87,7 @@ async function signInWithGoogle() {
   btn.disabled = true;
   await db.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.href }
+    options: { redirectTo: window.location.origin + '/' }
   });
 }
 
