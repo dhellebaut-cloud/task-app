@@ -132,15 +132,24 @@ function hideLoginScreen() {
 }
 
 function updateUserAvatar(user) {
-  const btn  = document.getElementById('user-avatar-btn');
-  const avatar = user.user_metadata?.avatar_url;
-  const name   = user.user_metadata?.full_name || user.email || '';
-  btn.title = `Signed in as ${name} — click to sign out`;
-  btn.style.display = 'flex';
-  btn.innerHTML = (avatar
-    ? `<img src="${avatar}" class="user-avatar-img" alt="${name}" />`
-    : `<span class="user-avatar-initials">${name.charAt(0).toUpperCase()}</span>`)
-    + `<span class="user-avatar-name">${name.split(' ')[0]}</span>`;
+  const email  = user.email || '';
+  const name   = user.user_metadata?.full_name || user.user_metadata?.name || email;
+  const avatar = user.user_metadata?.avatar_url || user.user_metadata?.picture || '';
+
+  // Header pill
+  const btn = document.getElementById('user-avatar-btn');
+  if (btn) {
+    btn.title = `Signed in as ${name} — click to sign out`;
+    btn.style.display = 'flex';
+    btn.innerHTML = (avatar
+      ? `<img src="${avatar}" class="user-avatar-img" alt="${name}" />`
+      : `<span class="user-avatar-initials">${(name || '?').charAt(0).toUpperCase()}</span>`)
+      + `<span class="user-avatar-name">${(name || email).split(' ')[0]}</span>`;
+  }
+
+  // Settings account info
+  const desc = document.getElementById('sp-account-desc');
+  if (desc) desc.textContent = `Signed in as ${name || email}`;
 }
 
 function renderAll() {

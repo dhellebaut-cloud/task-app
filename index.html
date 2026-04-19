@@ -30,9 +30,6 @@
             </svg>
           </button>
         </div>
-        <div class="hdr-right">
-          <button class="user-avatar-btn" id="user-avatar-btn" onclick="signOut()" title="Sign out" style="display:none"></button>
-        </div>
         <div class="pills">
           <div class="pill pill-priority" id="pill-priority" onclick="setFilter('priority')" title="Priority tasks">
             <span id="cnt-priority">0</span> priority
@@ -47,6 +44,7 @@
             <span id="cnt-all">0</span> all
           </div>
         </div>
+        <button class="user-avatar-btn" id="user-avatar-btn" onclick="signOut()" title="Sign out" style="display:none"></button>
       </div>
 
       <!-- Group filter tab bar — full width -->
@@ -181,6 +179,10 @@
             </div>
             <input type="hidden" id="sps-emoji" />
           </div>
+          <div class="sp-sec-title" style="margin-top:20px">Account</div>
+          <div class="sp-sec-desc" id="sp-account-desc">—</div>
+          <button class="sp-signout-btn" onclick="signOut()">Sign out</button>
+
           <div class="sp-sec-title" style="margin-top:20px">Slack</div>
           <div class="sp-sec-desc">Paste an Incoming Webhook URL to enable pinging people directly from tasks.</div>
           <div class="sp-form-field">

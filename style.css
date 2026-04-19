@@ -105,7 +105,19 @@ body {
 .login-google-btn:disabled { opacity: .5; cursor: default; }
 
 /* ── User avatar in header ── */
-.hdr-right { display: flex; align-items: center; margin-left: auto; padding-right: 10px; }
+.sp-signout-btn {
+  margin-top: 8px;
+  padding: 7px 14px;
+  background: none;
+  border: .5px solid #a32d2d;
+  border-radius: 6px;
+  color: #f09595;
+  font-family: var(--sans);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background .12s;
+}
+.sp-signout-btn:hover { background: rgba(163,45,45,.2); }
 .user-avatar-btn {
   height: 28px;
   border-radius: 20px;
