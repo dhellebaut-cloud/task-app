@@ -1,7 +1,7 @@
-const CACHE = 'tasks-v6';
-const ASSETS = [
-  './style.css',
-  './app.js',
+const CACHE = 'tasks-v7';
+
+// Only cache the heavy, never-changing assets
+const STATIC_ASSETS = [
   './supabase.min.js',
   './manifest.json',
   './icon.svg',
@@ -9,7 +9,7 @@ const ASSETS = [
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS))
+    caches.open(CACHE).then(c => c.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
@@ -34,15 +34,20 @@ self.addEventListener('fetch', e => {
     url.hostname.includes('jsdelivr.net')
   ) return;
 
-  // Always fetch index.html fresh from network, fall back to cache if offline
-  if (url.pathname === '/' || url.pathname.endsWith('index.html')) {
+  // Always fetch app code fresh — fall back to cache only if offline
+  if (
+    url.pathname === '/' ||
+    url.pathname.endsWith('index.html') ||
+    url.pathname.endsWith('app.js') ||
+    url.pathname.endsWith('style.css')
+  ) {
     e.respondWith(
-      fetch(e.request).catch(() => caches.match('./index.html'))
+      fetch(e.request).catch(() => caches.match(e.request))
     );
     return;
   }
 
-  // Cache-first for all other assets
+  // Cache-first for heavy static assets (supabase.min.js, icons, manifest)
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
   );
