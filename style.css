@@ -311,7 +311,6 @@ body {
   user-select: none;
 }
 .lshelf-hdr:hover { background: var(--bg4); }
-.lshelf-hdr:hover .lshelf-add-btn { opacity: 1; }
 .lshelf-arrow {
   color: var(--t3);
   transition: transform .15s;
@@ -337,30 +336,18 @@ body {
   border-radius: 8px;
   padding: 1px 6px;
 }
-.lshelf-add-btn {
-  margin-left: auto;
-  opacity: 0;
-  background: none;
-  border: none;
-  color: var(--t2);
-  cursor: pointer;
-  padding: 2px 4px;
-  border-radius: 4px;
+.lshelf-add-form {
   display: flex;
-  align-items: center;
-  transition: opacity .15s, background .12s;
-}
-.lshelf-add-btn:hover { background: var(--b2); }
-.lshelf-add-row {
-  display: flex;
-  gap: 6px;
-  padding: 6px 8px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 7px 8px;
   background: var(--bg3);
   border-top: .5px solid var(--b2);
   border-radius: 0 0 7px 7px;
 }
 .lshelf-input {
-  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
   background: var(--bg2);
   border: .5px solid var(--b2);
   border-radius: 5px;

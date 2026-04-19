@@ -43,53 +43,41 @@ function renderAll() {
 }
 
 /* ── Links shelf ── */
-function shortenUrl(url) {
-  try {
-    const u = new URL(url);
-    const host = u.hostname.replace(/^www\./, '');
-    const parts = u.pathname.split('/').filter(Boolean);
-    const path = parts.length ? '/' + parts.slice(0, 2).join('/') : '';
-    const short = host + path;
-    return short.length > 50 ? short.slice(0, 48) + '…' : short;
-  } catch { return url; }
-}
-
 function renderLinksShelf() {
   const shelf = document.getElementById('links-shelf');
   if (!shelf) return;
 
-  const faviconRow = links.map(l => {
+  const itemsHtml = links.map(l => {
     let domain = '';
     try { domain = new URL(l.url).hostname; } catch {}
-    const short = shortenUrl(l.url);
+    const title = esc(l.title || domain.replace(/^www\./, '') || l.url);
     return `<div class="lshelf-item">
       <img class="lshelf-fav" src="https://www.google.com/s2/favicons?domain=${domain}&sz=32" onerror="this.style.display='none'" />
-      <a class="lshelf-link" href="${l.url}" target="_blank" rel="noopener noreferrer">${esc(short)}</a>
+      <a class="lshelf-link" href="${l.url}" target="_blank" rel="noopener noreferrer">${title}</a>
       <button class="lshelf-del" onclick="deleteLink('${l.id}')" title="Remove">×</button>
     </div>`;
   }).join('');
 
   shelf.innerHTML = `
     <div class="lshelf-hdr" onclick="toggleLinksShelf()">
-      <svg class="lshelf-arrow${linksExpanded ? ' open' : ''}" width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><path d="M1.5 2.5l2.5 3 2.5-3"/></svg>
+      <svg class="lshelf-arrow${linksExpanded ? ' open' : ''}" width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,2.5 4,5.5 6.5,2.5"/></svg>
       <span class="lshelf-title">Links</span>
       ${links.length ? `<span class="lshelf-count">${links.length}</span>` : ''}
-      <button class="lshelf-add-btn" onclick="event.stopPropagation();openLinksAdd()" title="Add link">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      </button>
     </div>
-    <div class="lshelf-add-row" id="lshelf-add-row" style="display:${linksAddOpen ? 'flex' : 'none'}">
-      <input type="url" id="lshelf-input" class="lshelf-input" placeholder="Paste a URL..."
-             onkeydown="if(event.key==='Enter')submitLink();if(event.key==='Escape')closeLinksAdd()" />
-      <button class="lshelf-submit" onclick="submitLink()">Add</button>
-    </div>
-    ${linksExpanded && links.length ? `<div class="lshelf-list">${faviconRow}</div>` : ''}
-    ${linksExpanded && !links.length ? `<div class="lshelf-empty">No links yet — click + to add one</div>` : ''}
+    ${linksExpanded ? `
+      ${links.length ? `<div class="lshelf-list">${itemsHtml}</div>` : ''}
+      <div class="lshelf-add-form">
+        <input type="text" id="lshelf-title" class="lshelf-input" placeholder="Title..."
+               onkeydown="if(event.key==='Enter')document.getElementById('lshelf-url').focus()" />
+        <input type="url" id="lshelf-url" class="lshelf-input" placeholder="Paste URL..."
+               onkeydown="if(event.key==='Enter')submitLink()" />
+      </div>
+    ` : ''}
   `;
 
-  if (linksAddOpen) {
-    const inp = document.getElementById('lshelf-input');
-    if (inp) inp.focus();
+  if (linksExpanded) {
+    const urlInp = document.getElementById('lshelf-url');
+    if (urlInp && !links.length) urlInp.focus();
   }
 }
 
@@ -98,27 +86,23 @@ function toggleLinksShelf() {
   renderLinksShelf();
 }
 
-function openLinksAdd() {
-  linksAddOpen = true;
-  if (!linksExpanded) linksExpanded = true;
-  renderLinksShelf();
-}
-
-function closeLinksAdd() {
-  linksAddOpen = false;
-  renderLinksShelf();
-}
-
 function submitLink() {
-  const inp = document.getElementById('lshelf-input');
-  if (!inp) return;
-  let url = inp.value.trim();
+  const urlInp   = document.getElementById('lshelf-url');
+  const titleInp = document.getElementById('lshelf-title');
+  if (!urlInp) return;
+  let url = urlInp.value.trim();
   if (!url) return;
   if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-  links.unshift({ id: 'l' + Date.now(), url, added: new Date().toISOString() });
-  linksAddOpen = false;
+  let title = titleInp ? titleInp.value.trim() : '';
+  if (!title) {
+    try { title = new URL(url).hostname.replace(/^www\./, ''); } catch { title = url; }
+  }
+  links.unshift({ id: 'l' + Date.now(), url, title, added: new Date().toISOString() });
   persist();
   renderLinksShelf();
+  // Re-focus the title field for quick next entry
+  const t = document.getElementById('lshelf-title');
+  if (t) t.focus();
 }
 
 function deleteLink(id) {
