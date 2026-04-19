@@ -107,21 +107,22 @@ body {
 /* ── User avatar in header ── */
 .hdr-right { display: flex; align-items: center; margin-left: auto; padding-right: 10px; }
 .user-avatar-btn {
-  width: 28px; height: 28px;
-  border-radius: 50%;
+  height: 28px;
+  border-radius: 20px;
   border: 1.5px solid var(--b2);
   background: var(--bg3);
   cursor: pointer;
-  overflow: hidden;
-  padding: 0;
+  padding: 0 8px 0 2px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: border-color .15s;
+  gap: 6px;
+  transition: border-color .15s, background .15s;
+  overflow: hidden;
 }
-.user-avatar-btn:hover { border-color: var(--b3); }
-.user-avatar-img      { width: 100%; height: 100%; object-fit: cover; }
-.user-avatar-initials { font-size: 12px; font-weight: 600; color: var(--t2); }
+.user-avatar-btn:hover { border-color: var(--b3); background: var(--bg4); }
+.user-avatar-img      { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+.user-avatar-initials { width: 24px; height: 24px; border-radius: 50%; background: var(--ac); font-size: 11px; font-weight: 700; color: #fff; display: flex; align-items: center; justify-content: center; }
+.user-avatar-name     { font-size: 11px; color: var(--t2); font-family: var(--sans); white-space: nowrap; }
 
 /* ── Main card ── */
 #wrap {

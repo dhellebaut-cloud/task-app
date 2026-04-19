@@ -41,6 +41,7 @@ let syncTimer    = null;
 async function initAuth() {
   try {
     const { data: { session } } = await db.auth.getSession();
+    console.log('[Auth] session:', session ? `logged in as ${session.user.email}` : 'no session');
     if (session?.user) {
       await onSignIn(session.user);
     } else {
@@ -127,14 +128,15 @@ function hideLoginScreen() {
 }
 
 function updateUserAvatar(user) {
-  const btn = document.getElementById('user-avatar-btn');
+  const btn  = document.getElementById('user-avatar-btn');
   const avatar = user.user_metadata?.avatar_url;
   const name   = user.user_metadata?.full_name || user.email || '';
-  btn.title = `Signed in as ${name}\nClick to sign out`;
+  btn.title = `Signed in as ${name} — click to sign out`;
   btn.style.display = 'flex';
-  btn.innerHTML = avatar
+  btn.innerHTML = (avatar
     ? `<img src="${avatar}" class="user-avatar-img" alt="${name}" />`
-    : `<span class="user-avatar-initials">${name.charAt(0).toUpperCase()}</span>`;
+    : `<span class="user-avatar-initials">${name.charAt(0).toUpperCase()}</span>`)
+    + `<span class="user-avatar-name">${name.split(' ')[0]}</span>`;
 }
 
 function renderAll() {
