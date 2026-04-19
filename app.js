@@ -1052,8 +1052,11 @@ function appendSec(el, name, color, emoji, groupId) {
 function pingPerson(personId) {
   const p = people.find(x => x.id === personId);
   if (!p?.slackId) return;
-  const teamPart = profile.slackTeamId ? `?team=${profile.slackTeamId}&id=${p.slackId}` : `?id=${p.slackId}`;
-  window.location.href = `slack://channel${teamPart}`;
+  const team = profile.slackTeamId;
+  const url = team
+    ? `https://slack.com/app_redirect?channel=${p.slackId}&team=${team}`
+    : `https://slack.com/app_redirect?channel=${p.slackId}`;
+  window.open(url, '_blank');
 }
 
 /* ── Boot ── */
