@@ -77,8 +77,12 @@ async function signOut() {
 
 async function onSignIn(user) {
   currentUser = user;
-  await loadUserData();
   hideLoginScreen();
+  try {
+    await loadUserData();
+  } catch (err) {
+    console.error('[onSignIn] loadUserData failed:', err);
+  }
   renderAll();
   updateUserAvatar(user);
 }
