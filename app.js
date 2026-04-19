@@ -33,7 +33,11 @@
 /* ── Supabase ── */
 const SUPABASE_URL = 'https://hyvthznyfyddmwudislr.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_28O4FTB_YrM2ITAl-YrEyA_7RZKF0yZ';
-const db = (window.supabase || window.supabaseJs || supabase).createClient(SUPABASE_URL, SUPABASE_KEY);
+if (!window.supabase) {
+  document.getElementById('login-screen').innerHTML =
+    '<div style="color:#f09595;padding:40px;font-family:sans-serif">Error: Supabase failed to load. Please refresh.</div>';
+}
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser  = null;
 let syncTimer    = null;

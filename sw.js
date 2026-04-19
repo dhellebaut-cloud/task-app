@@ -1,7 +1,8 @@
-const CACHE = 'tasks-v4';
+const CACHE = 'tasks-v5';
 const ASSETS = [
   './style.css',
   './app.js',
+  './supabase.min.js',
   './manifest.json',
   './icon.svg',
 ];
