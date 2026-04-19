@@ -440,12 +440,50 @@ function pickEmoji(e) {
 }
 
 function saveProfile() {
-  profile.name         = document.getElementById('sps-name').value.trim();
-  profile.emoji        = document.getElementById('sps-emoji').value.trim();
-  profile.slackWebhook = document.getElementById('sps-slack-webhook').value.trim();
-  profile.slackTeamId  = document.getElementById('sps-slack-team').value.trim();
+  profile.name        = document.getElementById('sps-name').value.trim();
+  profile.emoji       = document.getElementById('sps-emoji').value.trim();
+  profile.slackTeamId = document.getElementById('sps-slack-team').value.trim();
   persist();
   renderProfileBar();
+}
+
+/* ── Export / Import ── */
+function exportData() {
+  const payload = JSON.stringify({ tasks, groups, people, profile, nextId }, null, 2);
+  const blob = new Blob([payload], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tasks-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const d = JSON.parse(ev.target.result);
+        if (d.tasks)   tasks   = d.tasks;
+        if (d.groups)  groups  = d.groups;
+        if (d.people)  people  = d.people;
+        if (d.profile) profile = d.profile;
+        if (d.nextId)  nextId  = d.nextId;
+        persist();
+        renderAll();
+        openSettings('general');
+      } catch (_) {
+        alert('Invalid backup file.');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 function renderProfileBar() {

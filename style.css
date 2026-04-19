@@ -118,6 +118,19 @@ body {
   transition: background .12s;
 }
 .sp-signout-btn:hover { background: rgba(163,45,45,.2); }
+.sp-data-btns { display: flex; gap: 8px; margin-top: 8px; }
+.sp-data-btn {
+  padding: 7px 14px;
+  background: none;
+  border: .5px solid var(--b2);
+  border-radius: 6px;
+  color: var(--t2);
+  font-family: var(--sans);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background .12s;
+}
+.sp-data-btn:hover { background: var(--bg3); }
 .user-avatar-btn {
   height: 28px;
   border-radius: 20px;
