@@ -1,4 +1,4 @@
-const CACHE = 'tasks-v5';
+const CACHE = 'tasks-v6';
 const ASSETS = [
   './style.css',
   './app.js',
