@@ -378,11 +378,10 @@ function openSettings(section) {
   selSettingsPeopleColor = 'purple';
   renderColorPicker('sps-g-colors', selSettingsGroupColor,  id => { selSettingsGroupColor  = id; });
   renderColorPicker('sps-p-colors', selSettingsPeopleColor, id => { selSettingsPeopleColor = id; });
-  document.getElementById('sps-name').value         = profile.name  || '';
-  document.getElementById('sps-emoji').value        = profile.emoji || '';
-  document.getElementById('sps-emoji-display').textContent = profile.emoji || '😀';
-  document.getElementById('sps-slack-webhook').value = profile.slackWebhook || '';
-  document.getElementById('sps-slack-team').value    = profile.slackTeamId  || '';
+  document.getElementById('sps-name').value                = profile.name       || '';
+  document.getElementById('sps-emoji').value               = profile.emoji      || '';
+  document.getElementById('sps-emoji-display').textContent = profile.emoji      || '😀';
+  document.getElementById('sps-slack-team').value          = profile.slackTeamId || '';
 }
 
 function closeSettings() {
