@@ -33,25 +33,30 @@
 /* ── Supabase ── */
 const SUPABASE_URL = 'https://hyvthznyfyddmwudislr.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_28O4FTB_YrM2ITAl-YrEyA_7RZKF0yZ';
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const db = (window.supabase || window.supabaseJs || supabase).createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentUser  = null;
 let syncTimer    = null;
 
 async function initAuth() {
-  const { data: { session } } = await db.auth.getSession();
-  if (session?.user) {
-    await onSignIn(session.user);
-  } else {
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    if (session?.user) {
+      await onSignIn(session.user);
+    } else {
+      showLoginScreen();
+    }
+    db.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user && !currentUser) {
+        await onSignIn(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        onSignOut();
+      }
+    });
+  } catch (err) {
+    console.error('Auth error:', err);
     showLoginScreen();
   }
-  db.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session?.user && !currentUser) {
-      await onSignIn(session.user);
-    } else if (event === 'SIGNED_OUT') {
-      onSignOut();
-    }
-  });
 }
 
 async function signInWithGoogle() {
