@@ -179,11 +179,7 @@
           </div>
 
           <div class="sp-sec-title" style="margin-top:20px">Slack</div>
-          <div class="sp-sec-desc">Paste an Incoming Webhook URL to enable pinging people directly from tasks.</div>
-          <div class="sp-form-field">
-            <label class="sp-field-label">Webhook URL</label>
-            <input type="text" id="sps-slack-webhook" class="sp-input" placeholder="https://hooks.slack.com/services/..." oninput="saveProfile()" />
-          </div>
+          <div class="sp-sec-desc">Add a Slack User ID to each person in People to enable direct pinging from tasks.</div>
           <div class="sp-form-field">
             <label class="sp-field-label">Team ID</label>
             <input type="text" id="sps-slack-team" class="sp-input" placeholder="T0123ABCD — from your Slack workspace URL" oninput="saveProfile()" />
@@ -227,33 +223,7 @@
     </div><!-- /#settings-panel -->
   </div><!-- /#settings-overlay -->
 
-  <!-- ── PING OVERLAY ── -->
-  <div id="ping-overlay" onclick="pingOverlayClick(event)">
-    <div id="ping-popup">
-      <div class="pop-hdr">
-        <span class="pop-title" id="ping-title">Ping</span>
-        <button class="close-btn" onclick="closePingPopup()">×</button>
-      </div>
-      <div class="pop-body">
-        <div class="pf">
-          <textarea id="ping-msg" placeholder="Message..."></textarea>
-        </div>
-        <div class="pf">
-          <input type="url" id="ping-url" placeholder="Link (Google Drive, etc.) — optional" />
-        </div>
-        <div id="ping-no-webhook" class="ping-warning" style="display:none">
-          No Slack webhook configured. Add one in Settings → General.
-        </div>
-      </div>
-      <div class="pop-footer">
-        <button class="btn-cancel" onclick="closePingPopup()">Cancel</button>
-        <button id="ping-open-btn" class="btn-slack-open" onclick="openInSlack()" style="display:none">Open in Slack</button>
-        <button class="btn-add" onclick="sendPing()">Send</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="app.js"></script>
+<script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js');

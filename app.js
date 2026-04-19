@@ -66,7 +66,6 @@ let nextId       = 1;
 let selSettingsGroupColor  = 'purple';
 let selSettingsPeopleColor = 'purple';
 let profile                = { name: '', emoji: '', slackWebhook: '', slackTeamId: '' };
-let pingPersonId           = null;
 let people                 = [];
 let activeSettingsSection  = 'general';
 let prioChecked  = false;    // state of priority checkbox in popup
@@ -780,7 +779,7 @@ function makeCard(t) {
           <div class="ttitle">${esc(t.title)}</div>
           ${due ? `<div class="tdue ${due.cls}">${due.label}</div>` : ''}
         </div>
-        ${pingPerson ? `<button class="trow-ping" onclick="event.stopPropagation();openPingPopup('${pingPerson.id}','${esc(t.title).replace(/'/g,"\\'")}')">Ping ${esc(pingPerson.name)}</button>` : ''}
+        ${pingPerson ? `<button class="trow-ping" onclick="event.stopPropagation();pingPerson('${pingPerson.id}')">Ping ${esc(pingPerson.name)}</button>` : ''}
         <button class="trow-del" onclick="event.stopPropagation();delTask(${t.id})" title="Delete">Delete</button>
       </div>
       <div class="tdet" id="det-${t.id}">
@@ -930,68 +929,12 @@ function appendSec(el, name, color, emoji, groupId) {
   el.appendChild(h);
 }
 
-/* ── Ping popup ── */
-function openPingPopup(personId, taskTitle) {
+/* ── Ping ── */
+function pingPerson(personId) {
   const p = people.find(x => x.id === personId);
-  if (!p) return;
-  pingPersonId = personId;
-
-  document.getElementById('ping-title').textContent = `Ping ${p.name}`;
-  document.getElementById('ping-msg').value = 'Hi!';
-  document.getElementById('ping-url').value = '';
-  document.getElementById('ping-no-webhook').style.display = profile.slackWebhook ? 'none' : 'block';
-  document.getElementById('ping-open-btn').style.display   = p.slackId ? 'inline-flex' : 'none';
-
-  document.getElementById('ping-overlay').classList.add('vis');
-  setTimeout(() => {
-    const ta = document.getElementById('ping-msg');
-    ta.focus();
-    ta.setSelectionRange(ta.value.length, ta.value.length);
-  }, 50);
-}
-
-function closePingPopup() {
-  document.getElementById('ping-overlay').classList.remove('vis');
-  pingPersonId = null;
-}
-
-function pingOverlayClick(e) {
-  if (e.target === document.getElementById('ping-overlay')) closePingPopup();
-}
-
-function openInSlack() {
-  const p = people.find(x => x.id === pingPersonId);
   if (!p?.slackId) return;
   const teamPart = profile.slackTeamId ? `?team=${profile.slackTeamId}&id=${p.slackId}` : `?id=${p.slackId}`;
   window.location.href = `slack://channel${teamPart}`;
-}
-
-async function sendPing() {
-  const msg = document.getElementById('ping-msg').value.trim();
-  if (!msg) return;
-  if (!profile.slackWebhook) {
-    document.getElementById('ping-no-webhook').style.display = 'block';
-    return;
-  }
-  const p       = people.find(x => x.id === pingPersonId);
-  const mention = p?.slackId ? `<@${p.slackId}> ` : '';
-  const url     = document.getElementById('ping-url').value.trim();
-  const text    = mention + msg + (url ? '\n' + url : '');
-  const btn     = document.querySelector('#ping-popup .btn-add');
-  btn.textContent = 'Sending…';
-  btn.disabled    = true;
-  try {
-    await fetch(profile.slackWebhook, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
-    });
-    closePingPopup();
-  } catch (_) {
-    btn.textContent = 'Send';
-    btn.disabled    = false;
-  }
 }
 
 /* ── Boot ── */
