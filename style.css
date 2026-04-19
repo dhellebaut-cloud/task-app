@@ -331,10 +331,11 @@ body {
 }
 .lshelf-count {
   font-size: 10px;
-  color: var(--t3);
-  background: var(--bg2);
+  font-weight: 600;
+  color: #cbc8f5;
+  background: var(--ac2);
   border-radius: 8px;
-  padding: 1px 6px;
+  padding: 1px 7px;
 }
 .lshelf-add-form {
   display: flex;
