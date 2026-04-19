@@ -30,6 +30,118 @@
    page refreshes. Keys: 'tasks-app:tasks', 'tasks-app:groups'
    ============================================================ */
 
+/* ── Supabase ── */
+const SUPABASE_URL = 'https://hyvthznyfyddmwudislr.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_28O4FTB_YrM2ITAl-YrEyA_7RZKF0yZ';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser  = null;
+let syncTimer    = null;
+
+async function initAuth() {
+  const { data: { session } } = await db.auth.getSession();
+  if (session?.user) {
+    await onSignIn(session.user);
+  } else {
+    showLoginScreen();
+  }
+  db.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user && !currentUser) {
+      await onSignIn(session.user);
+    } else if (event === 'SIGNED_OUT') {
+      onSignOut();
+    }
+  });
+}
+
+async function signInWithGoogle() {
+  const btn = document.querySelector('.login-google-btn');
+  btn.textContent = 'Signing in…';
+  btn.disabled = true;
+  await db.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.href }
+  });
+}
+
+async function signOut() {
+  await db.auth.signOut();
+}
+
+async function onSignIn(user) {
+  currentUser = user;
+  await loadUserData();
+  hideLoginScreen();
+  renderAll();
+  updateUserAvatar(user);
+}
+
+function onSignOut() {
+  currentUser = null;
+  tasks = []; groups = []; people = [];
+  profile = { name: '', emoji: '', slackWebhook: '', slackTeamId: '' };
+  nextId = 1;
+  document.getElementById('user-avatar-btn').style.display = 'none';
+  showLoginScreen();
+}
+
+async function loadUserData() {
+  const { data, error } = await db
+    .from('user_data')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .maybeSingle();
+
+  if (!data) {
+    // First login — insert empty row, keep state empty
+    await db.from('user_data').insert({ user_id: currentUser.id });
+    return;
+  }
+  tasks   = data.tasks   || [];
+  groups  = data.groups  || [];
+  people  = data.people  || [];
+  profile = data.profile || { name: '', emoji: '', slackWebhook: '', slackTeamId: '' };
+  nextId  = data.next_id || 1;
+}
+
+async function syncToSupabase() {
+  if (!currentUser) return;
+  await db.from('user_data').upsert({
+    user_id: currentUser.id,
+    tasks, groups, people, profile,
+    next_id: nextId,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'user_id' });
+}
+
+function showLoginScreen() {
+  document.getElementById('login-screen').classList.add('vis');
+}
+function hideLoginScreen() {
+  document.getElementById('login-screen').classList.remove('vis');
+}
+
+function updateUserAvatar(user) {
+  const btn = document.getElementById('user-avatar-btn');
+  const avatar = user.user_metadata?.avatar_url;
+  const name   = user.user_metadata?.full_name || user.email || '';
+  btn.title = `Signed in as ${name}\nClick to sign out`;
+  btn.style.display = 'flex';
+  btn.innerHTML = avatar
+    ? `<img src="${avatar}" class="user-avatar-img" alt="${name}" />`
+    : `<span class="user-avatar-initials">${name.charAt(0).toUpperCase()}</span>`;
+}
+
+function renderAll() {
+  renderGroupSelect();
+  renderGBar();
+  renderList();
+  setFilter(activeFilter);
+  renderProfileBar();
+  document.getElementById('date-bar').textContent =
+    new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 /* ── Colour palette ── */
 const COLS = [
   { id: 'purple', h: '#7f77dd' },
@@ -70,6 +182,8 @@ function persist() {
     localStorage.setItem('tasks-app:profile', JSON.stringify(profile));
     localStorage.setItem('tasks-app:nextId',  String(nextId));
   } catch (_) { /* storage unavailable */ }
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncToSupabase, 1500);
 }
 
 function loadFromStorage() {
@@ -985,14 +1099,7 @@ async function sendPing() {
 
 /* ── Boot ── */
 function init() {
-  loadFromStorage();
-  renderProfileBar();
-  document.getElementById('date-bar').textContent =
-    new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-  renderGroupSelect();
-  renderGBar();
-  renderList();
-  setFilter('open');
+  initAuth();
 }
 
 init();
