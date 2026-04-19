@@ -159,6 +159,11 @@ function esc(s) {
     .replace(/>/g, '&gt;');
 }
 
+function linkify(s) {
+  return s.replace(/(https?:\/\/[^\s<]+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+}
+
 function dueTxt(due) {
   if (!due) return null;
   const d    = new Date(due);
@@ -825,7 +830,7 @@ function makeCard(t) {
           ${t.due      ? `<span class="dl">Due</span><span class="dv">${new Date(t.due).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'long' })}</span>` : ''}
           ${g          ? `<span class="dl">Group</span><span class="dv"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${g.color};margin-right:4px;vertical-align:middle"></span>${esc(g.name)}</span>` : ''}
         </div>
-        ${t.notes ? `<div class="dnotes">${esc(t.notes)}</div>` : ''}
+        ${t.notes ? `<div class="dnotes">${linkify(esc(t.notes))}</div>` : ''}
         <div class="dacts">
           <button class="dact" onclick="startEdit(${t.id})">Edit</button>
           <button class="dact del" onclick="delTask(${t.id})">Delete</button>

@@ -581,7 +581,14 @@ button.sec-pill { cursor: pointer; }
   color: var(--t2);
   line-height: 1.7;
   background: var(--bg4);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
+.dnotes a {
+  color: #8b87e0;
+  text-decoration: none;
+}
+.dnotes a:hover { text-decoration: underline; }
 
 .dacts { display: flex; gap: 5px; margin-top: 8px; }
 .dact {
