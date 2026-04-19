@@ -30,148 +30,6 @@
    page refreshes. Keys: 'tasks-app:tasks', 'tasks-app:groups'
    ============================================================ */
 
-/* ── Supabase ── */
-const SUPABASE_URL = 'https://hyvthznyfyddmwudislr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_28O4FTB_YrM2ITAl-YrEyA_7RZKF0yZ';
-if (!window.supabase) {
-  document.getElementById('login-screen').innerHTML =
-    '<div style="color:#f09595;padding:40px;font-family:sans-serif">Error: Supabase failed to load. Please refresh.</div>';
-}
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-let currentUser  = null;
-let syncTimer    = null;
-
-async function initAuth() {
-  try {
-    // Register listener for future events (token refresh, sign out)
-    db.auth.onAuthStateChange(async (event, session) => {
-      console.log('[Auth] event:', event, session?.user?.email || 'no user');
-      if (event === 'SIGNED_IN' && session?.user && !currentUser) {
-        await onSignIn(session.user);
-      } else if (event === 'SIGNED_OUT') {
-        onSignOut();
-      }
-    });
-
-    // If returning from OAuth redirect, explicitly exchange the code
-    const params = new URLSearchParams(window.location.search);
-    if (params.has('code')) {
-      console.log('[Auth] OAuth code detected, exchanging...');
-      const { data, error } = await db.auth.exchangeCodeForSession(window.location.href);
-      console.log('[Auth] exchange result:', data?.session?.user?.email || 'no session', error?.message || '');
-      if (data?.session?.user && !currentUser) {
-        window.history.replaceState({}, '', window.location.pathname);
-        await onSignIn(data.session.user);
-        return;
-      }
-    }
-
-    // Normal session check (already logged in)
-    const { data: { session }, error } = await db.auth.getSession();
-    console.log('[Auth] getSession:', session?.user?.email || 'no session', error?.message || '');
-    if (session?.user && !currentUser) {
-      await onSignIn(session.user);
-    } else if (!session?.user && !currentUser) {
-      showLoginScreen();
-    }
-  } catch (err) {
-    console.error('[Auth] init error:', err);
-    showLoginScreen();
-  }
-}
-
-async function signInWithGoogle() {
-  const btn = document.querySelector('.login-google-btn');
-  btn.textContent = 'Signing in…';
-  btn.disabled = true;
-  await db.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin + '/' }
-  });
-}
-
-async function signOut() {
-  await db.auth.signOut();
-}
-
-async function onSignIn(user) {
-  currentUser = user;
-  hideLoginScreen();
-  try {
-    await loadUserData();
-  } catch (err) {
-    console.error('[onSignIn] loadUserData failed:', err);
-  }
-  renderAll();
-  updateUserAvatar(user);
-}
-
-function onSignOut() {
-  currentUser = null;
-  tasks = []; groups = []; people = [];
-  profile = { name: '', emoji: '', slackWebhook: '', slackTeamId: '' };
-  nextId = 1;
-  document.getElementById('user-avatar-btn').style.display = 'none';
-  showLoginScreen();
-}
-
-async function loadUserData() {
-  const { data, error } = await db
-    .from('user_data')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .maybeSingle();
-
-  if (!data) {
-    // First login — insert empty row, keep state empty
-    await db.from('user_data').insert({ user_id: currentUser.id });
-    return;
-  }
-  tasks   = data.tasks   || [];
-  groups  = data.groups  || [];
-  people  = data.people  || [];
-  profile = data.profile || { name: '', emoji: '', slackWebhook: '', slackTeamId: '' };
-  nextId  = data.next_id || 1;
-}
-
-async function syncToSupabase() {
-  if (!currentUser) return;
-  await db.from('user_data').upsert({
-    user_id: currentUser.id,
-    tasks, groups, people, profile,
-    next_id: nextId,
-    updated_at: new Date().toISOString()
-  }, { onConflict: 'user_id' });
-}
-
-function showLoginScreen() {
-  document.getElementById('login-screen').classList.add('vis');
-}
-function hideLoginScreen() {
-  document.getElementById('login-screen').classList.remove('vis');
-}
-
-function updateUserAvatar(user) {
-  const email  = user.email || '';
-  const name   = user.user_metadata?.full_name || user.user_metadata?.name || email;
-  const avatar = user.user_metadata?.avatar_url || user.user_metadata?.picture || '';
-
-  // Header pill
-  const btn = document.getElementById('user-avatar-btn');
-  if (btn) {
-    btn.title = `Signed in as ${name} — click to sign out`;
-    btn.style.display = 'flex';
-    btn.innerHTML = (avatar
-      ? `<img src="${avatar}" class="user-avatar-img" alt="${name}" />`
-      : `<span class="user-avatar-initials">${(name || '?').charAt(0).toUpperCase()}</span>`)
-      + `<span class="user-avatar-name">${(name || email).split(' ')[0]}</span>`;
-  }
-
-  // Settings account info
-  const desc = document.getElementById('sp-account-desc');
-  if (desc) desc.textContent = `Signed in as ${name || email}`;
-}
 
 function renderAll() {
   renderGroupSelect();
@@ -223,8 +81,6 @@ function persist() {
     localStorage.setItem('tasks-app:profile', JSON.stringify(profile));
     localStorage.setItem('tasks-app:nextId',  String(nextId));
   } catch (_) { /* storage unavailable */ }
-  clearTimeout(syncTimer);
-  syncTimer = setTimeout(syncToSupabase, 1500);
 }
 
 function loadFromStorage() {
@@ -1140,7 +996,8 @@ async function sendPing() {
 
 /* ── Boot ── */
 function init() {
-  initAuth();
+  loadFromStorage();
+  renderAll();
 }
 
 init();
