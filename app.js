@@ -44,16 +44,13 @@ let syncTimer    = null;
 
 async function initAuth() {
   try {
-    const { data: { session } } = await db.auth.getSession();
-    console.log('[Auth] session:', session ? `logged in as ${session.user.email}` : 'no session');
-    if (session?.user) {
-      await onSignIn(session.user);
-    } else {
-      showLoginScreen();
-    }
+    // Register listener FIRST so we never miss an event from the OAuth redirect
     db.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user && !currentUser) {
+      console.log('[Auth] event:', event, session?.user?.email || 'no user');
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user && !currentUser) {
         await onSignIn(session.user);
+      } else if (event === 'INITIAL_SESSION' && !session?.user && !currentUser) {
+        showLoginScreen();
       } else if (event === 'SIGNED_OUT') {
         onSignOut();
       }
