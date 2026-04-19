@@ -1,0 +1,10 @@
+{
+  "name": "task-app",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "browser-sync start --server --files '*.html, *.css, *.js' --no-notify"
+  },
+  "devDependencies": {
+    "browser-sync": "^3.0.3"
+  }
+}

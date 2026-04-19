@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tasks</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <meta name="theme-color" content="#1a1917" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Tasks" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── MAIN WRAPPER ── -->
+    <div id="wrap">
+
+      <!-- Header: title + stat pills -->
+      <div class="hdr">
+        <div class="hdr-left">
+          <span class="hdr-title">Tasks</span>
+          <button class="cog-btn" onclick="openSettings('general')" title="Settings">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="pills">
+          <div class="pill pill-priority" id="pill-priority" onclick="setFilter('priority')" title="Priority tasks">
+            <span id="cnt-priority">0</span> priority
+          </div>
+          <div class="pill pill-open active" id="pill-open" onclick="setFilter('open')" title="Open tasks">
+            <span id="cnt-open">0</span> open
+          </div>
+          <div class="pill pill-done" id="pill-done" onclick="setFilter('done')" title="Completed tasks">
+            <span id="cnt-done">0</span> done
+          </div>
+          <div class="pill pill-all" id="pill-all" onclick="setFilter('all')" title="All tasks">
+            <span id="cnt-all">0</span> all
+          </div>
+        </div>
+      </div>
+
+      <!-- Group filter tab bar — full width -->
+      <div class="gbar" id="gbar"></div>
+
+      <!-- Constrained content area -->
+      <div class="content-wrap">
+
+        <!-- Profile + Date bar -->
+        <div class="profile-bar" id="profile-bar"></div>
+        <div class="date-bar" id="date-bar"></div>
+        <div class="add-task-row">
+          <button class="add-btn" onclick="openPopup()">
+            <div class="plus-icon"></div>
+            Add task
+          </button>
+        </div>
+
+        <!-- Task list -->
+        <div id="tlist"></div>
+
+      </div>
+
+    </div><!-- /#wrap -->
+
+    <!-- ── OVERLAY (add/edit popup + group manager) ── -->
+    <div id="overlay" onclick="overlayClick(event)">
+
+      <!-- Add / edit task popup -->
+      <div id="popup">
+        <div class="pop-hdr">
+          <span class="pop-title" id="pop-title-text">New task</span>
+          <button class="close-btn" onclick="closePopup()">×</button>
+        </div>
+        <div class="pop-body">
+
+          <!-- Title -->
+          <div class="pf">
+            <input id="p-title" type="text" placeholder="Task title..."
+              onkeydown="if(event.key==='Enter')submitTask()" />
+          </div>
+
+          <!-- Priority toggle -->
+          <div class="prio-row">
+            <div class="prio-chk-box" id="prio-chk" onclick="togglePrioChk()">
+              <div class="tick"></div>
+            </div>
+            <span class="prio-label" id="prio-label" onclick="togglePrioChk()">Mark as priority</span>
+          </div>
+
+          <!-- Detail fields -->
+          <div id="extra-fields">
+            <div class="pf">
+              <div class="pfl">From</div>
+              <div style="position:relative">
+                <textarea id="p-from" placeholder="Name or team" rows="1"
+                          oninput="onFromInput()" onblur="hideFromSuggestions()"
+                          onkeydown="if(event.key==='Enter')event.preventDefault()"></textarea>
+                <div id="from-suggestions" class="from-suggestions"></div>
+              </div>
+              <div class="from-chips" id="from-chips"></div>
+            </div>
+            <div class="pf">
+              <div class="pfl">Group</div>
+              <input type="hidden" id="p-group" />
+              <div class="group-chips" id="group-chips"></div>
+            </div>
+            <div class="pf">
+              <div class="pfl">Due date</div>
+              <div class="due-row">
+                <button type="button" class="due-chip" id="due-today" onclick="selectDue('today')">Today</button>
+                <button type="button" class="due-chip" id="due-week" onclick="selectDue('week')">This week</button>
+                <input type="date" id="p-due" class="due-date-pick" oninput="onDueInputChange()" />
+              </div>
+            </div>
+            <div class="pf">
+              <div class="pfl">Notes</div>
+              <textarea id="p-notes" placeholder="Context, links, briefing..."></textarea>
+            </div>
+          </div>
+
+        </div>
+        <div class="pop-footer">
+          <button class="btn-cancel" onclick="closePopup()">Cancel</button>
+          <button class="btn-add" onclick="submitTask()">Add task</button>
+        </div>
+      </div><!-- /#popup -->
+
+    </div><!-- /#overlay -->
+
+  </div><!-- /#app -->
+
+  <!-- ── SETTINGS OVERLAY ── -->
+  <div id="settings-overlay" onclick="settingsOverlayClick(event)">
+    <div id="settings-panel">
+
+      <!-- Sidebar -->
+      <div class="sp-sidebar">
+        <div class="sp-brand">Settings</div>
+        <nav class="sp-nav-list">
+          <button class="sp-nav-btn" id="sp-nav-general" onclick="showSettingsSection('general')">
+            <span>👤</span> General
+          </button>
+          <button class="sp-nav-btn" id="sp-nav-groups" onclick="showSettingsSection('groups')">
+            <span>🗂</span> Groups
+          </button>
+          <button class="sp-nav-btn" id="sp-nav-people" onclick="showSettingsSection('people')">
+            <span>👥</span> People
+          </button>
+        </nav>
+      </div>
+
+      <!-- Main content -->
+      <div class="sp-main">
+        <button class="sp-close-btn" onclick="closeSettings()">×</button>
+
+        <!-- General -->
+        <div class="sp-sec" id="sps-general">
+          <div class="sp-sec-title">Profile</div>
+          <div class="sp-sec-desc">Your identity — used in future collaboration features.</div>
+          <div class="sp-form-field">
+            <label class="sp-field-label">Display name</label>
+            <input type="text" id="sps-name" class="sp-input" placeholder="Your name..." oninput="saveProfile()" />
+          </div>
+          <div class="sp-form-field">
+            <label class="sp-field-label">Avatar emoji</label>
+            <div class="emoji-pick-wrap">
+              <div class="emoji-pick-btn" id="sps-emoji-btn" onclick="toggleEmojiPicker()">
+                <span id="sps-emoji-display">😀</span>
+              </div>
+              <div class="emoji-picker" id="emoji-picker" style="display:none"></div>
+            </div>
+            <input type="hidden" id="sps-emoji" />
+          </div>
+          <div class="sp-sec-title" style="margin-top:20px">Slack</div>
+          <div class="sp-sec-desc">Paste an Incoming Webhook URL to enable pinging people directly from tasks.</div>
+          <div class="sp-form-field">
+            <label class="sp-field-label">Webhook URL</label>
+            <input type="text" id="sps-slack-webhook" class="sp-input" placeholder="https://hooks.slack.com/services/..." oninput="saveProfile()" />
+          </div>
+          <div class="sp-form-field">
+            <label class="sp-field-label">Team ID</label>
+            <input type="text" id="sps-slack-team" class="sp-input" placeholder="T0123ABCD — from your Slack workspace URL" oninput="saveProfile()" />
+          </div>
+        </div>
+
+        <!-- Groups -->
+        <div class="sp-sec" id="sps-groups">
+          <div class="sp-sec-title">Groups</div>
+          <div class="sp-sec-desc">Organise tasks into colour-coded groups. Emoji helps spot them at a glance.</div>
+          <div id="sps-group-list" class="sp-list"></div>
+          <div class="sp-add-form">
+            <div class="sp-add-row1">
+              <input type="text" id="sps-g-name" class="sp-input sp-grow" placeholder="Group name..."
+                     onkeydown="if(event.key==='Enter')addSettingsGroup()" />
+              <button class="sp-add-btn" onclick="addSettingsGroup()">Add</button>
+            </div>
+            <div class="crow" id="sps-g-colors"></div>
+          </div>
+        </div>
+
+        <!-- People -->
+        <div class="sp-sec" id="sps-people">
+          <div class="sp-sec-title">People</div>
+          <div class="sp-sec-desc">Teammates shown as quick-picks in the From field — most used appear first.</div>
+          <div id="sps-people-list" class="sp-list"></div>
+          <div class="sp-add-form">
+            <div class="sp-add-row1">
+              <input type="text" id="sps-p-name" class="sp-input sp-grow" placeholder="Person's name..."
+                     onkeydown="if(event.key==='Enter')addSettingsPerson()" />
+              <button class="sp-add-btn" onclick="addSettingsPerson()">Add</button>
+            </div>
+            <div class="sp-add-row1" style="margin-top:5px">
+              <input type="text" id="sps-p-slack" class="sp-input sp-grow" placeholder="Slack User ID (e.g. U0G9QF9C6) — optional" />
+            </div>
+            <div class="crow" id="sps-p-colors"></div>
+          </div>
+        </div>
+
+      </div><!-- /.sp-main -->
+    </div><!-- /#settings-panel -->
+  </div><!-- /#settings-overlay -->
+
+  <!-- ── PING OVERLAY ── -->
+  <div id="ping-overlay" onclick="pingOverlayClick(event)">
+    <div id="ping-popup">
+      <div class="pop-hdr">
+        <span class="pop-title" id="ping-title">Ping</span>
+        <button class="close-btn" onclick="closePingPopup()">×</button>
+      </div>
+      <div class="pop-body">
+        <div class="pf">
+          <textarea id="ping-msg" placeholder="Message..."></textarea>
+        </div>
+        <div class="pf">
+          <input type="url" id="ping-url" placeholder="Link (Google Drive, etc.) — optional" />
+        </div>
+        <div id="ping-no-webhook" class="ping-warning" style="display:none">
+          No Slack webhook configured. Add one in Settings → General.
+        </div>
+      </div>
+      <div class="pop-footer">
+        <button class="btn-cancel" onclick="closePingPopup()">Cancel</button>
+        <button id="ping-open-btn" class="btn-slack-open" onclick="openInSlack()" style="display:none">Open in Slack</button>
+        <button class="btn-add" onclick="sendPing()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
+</body>
+</html>
