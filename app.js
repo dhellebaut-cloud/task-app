@@ -1189,8 +1189,7 @@ function renderSubtaskRow(projectId, s, projColor) {
       ${s.priority ? '<span class="proj-st-prio-flag">!</span>' : ''}
       <span class="proj-st-title">${esc(s.title)}</span>
       ${dueHtml}
-      ${s.link ? `<a class="proj-st-link-icon" href="${esc(s.link)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="Open link">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></a>` : ''}
+      ${s.link ? `<button class="proj-st-copy-btn" id="copy-btn-${s.id}" onclick="event.stopPropagation();copySubtaskLink('${s.id}','${esc(s.link)}')">Copy link</button>` : ''}
       <button class="proj-st-del" onclick="event.stopPropagation();deleteSubtask('${projectId}','${s.id}')">×</button>
     </div>
     ${extra}
@@ -1275,6 +1274,19 @@ function submitInlineSubtask(projectId) {
   inlineSubtaskPriority = false;
   persist();
   renderProjects(); // keeps add row open for rapid entry
+}
+
+function copySubtaskLink(subtaskId, url) {
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copy-btn-' + subtaskId);
+    if (!btn) return;
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg> Copied';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.textContent = 'Copy link';
+    }, 1800);
+  });
 }
 
 function deleteSubtask(projectId, subtaskId) {

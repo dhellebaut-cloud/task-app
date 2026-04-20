@@ -1271,14 +1271,24 @@ button.sec-pill { cursor: pointer; }
 }
 .proj-st-due.ov { color: #f09595; }
 .proj-st-due.sn { color: #fac775; }
-.proj-st-link-icon {
+.proj-st-copy-btn {
   display: flex;
   align-items: center;
-  color: var(--t3);
+  gap: 4px;
   flex-shrink: 0;
-  transition: color .12s;
+  background: none;
+  border: .5px solid var(--b2);
+  border-radius: 4px;
+  color: var(--t3);
+  font-size: 10px;
+  font-family: var(--sans);
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: color .12s, border-color .12s, background .12s;
+  white-space: nowrap;
 }
-.proj-st-link-icon:hover { color: var(--ac3); }
+.proj-st-copy-btn:hover { color: var(--t1); border-color: var(--t2); }
+.proj-st-copy-btn.copied { color: #6fcf8e; border-color: #1d9e75; }
 .proj-st-link-row {
   display: flex;
   align-items: center;
