@@ -1142,6 +1142,7 @@ button.sec-pill { cursor: pointer; }
   padding: 0;
   cursor: text;
 }
+.proj-hdr-spacer { flex: 1; }
 .proj-name-input:focus {
   background: var(--bg4);
   border-radius: 4px;

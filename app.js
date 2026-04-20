@@ -1128,6 +1128,7 @@ function renderProjectCard(p) {
              oninput="this.size=Math.max(this.value.length,3)"
              onblur="updateProjectField('${p.id}','title',this.value.trim()||'${esc(p.title)}')"
              onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){this.value='${esc(p.title)}';this.size=${Math.max(p.title.length,3)};this.blur()}" />
+      <span class="proj-hdr-spacer"></span>
       ${isComplete ? '<span class="proj-complete-tag">Completed</span>' : ''}
       ${dl ? `<span class="proj-dl-chip${dl.cls ? ' ' + dl.cls : ''}">${dl.label}</span>` : ''}
       <span class="proj-count">${done}/${total}</span>
