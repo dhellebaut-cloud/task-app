@@ -1141,22 +1141,31 @@ function renderSubtaskRow(projectId, s) {
                onchange="updateSubtaskField('${projectId}','${s.id}','due',this.value)" />
       </div>
       <div class="pf">
+        <div class="pfl">Link</div>
+        <input class="sp-input" type="url" value="${esc(s.link||'')}" placeholder="https://drive.google.com/..."
+               onchange="updateSubtaskField('${projectId}','${s.id}','link',this.value)" />
+      </div>
+      <div class="pf">
         <div class="pfl">Notes</div>
         <textarea class="sp-input" rows="2" placeholder="Notes..."
                   onchange="updateSubtaskField('${projectId}','${s.id}','notes',this.value)">${esc(s.notes||'')}</textarea>
       </div>
+      <div class="proj-st-save-row">
+        <button class="proj-st-save-btn" onclick="toggleSubtaskExpand('${s.id}')">Save</button>
+      </div>
     </div>` : '';
 
   return `<div class="proj-st${s.done ? ' done' : ''}">
-    <div class="proj-st-row">
-      <div class="proj-st-check${s.done ? ' on' : ''}" onclick="toggleSubtaskDone('${projectId}','${s.id}')">
+    <div class="proj-st-row" onclick="toggleSubtaskExpand('${s.id}')">
+      <div class="proj-st-check${s.done ? ' on' : ''}" onclick="event.stopPropagation();toggleSubtaskDone('${projectId}','${s.id}')">
         ${s.done ? `<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg>` : ''}
       </div>
+      ${s.priority ? '<span class="proj-st-prio-flag">!</span>' : ''}
       <span class="proj-st-title">${esc(s.title)}</span>
-      <button class="proj-st-expand-btn" onclick="toggleSubtaskExpand('${s.id}')">
+      <button class="proj-st-expand-btn" onclick="event.stopPropagation();toggleSubtaskExpand('${s.id}')">
         <svg class="proj-st-arr${expanded ? ' open' : ''}" width="7" height="7" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,2.5 4,5.5 6.5,2.5"/></svg>
       </button>
-      <button class="proj-st-del" onclick="deleteSubtask('${projectId}','${s.id}')">×</button>
+      <button class="proj-st-del" onclick="event.stopPropagation();deleteSubtask('${projectId}','${s.id}')">×</button>
     </div>
     ${extra}
   </div>`;
@@ -1219,7 +1228,7 @@ function submitInlineSubtask(projectId) {
   if (!title) { closeInlineSubtask(); return; }
   const p = projects.find(x => x.id === projectId);
   if (!p) return;
-  p.subtasks.push({ id: 'st' + Date.now() + Math.random().toString(36).slice(2,6), title, done: false, priority: false, from: '', due: '', notes: '', created: new Date().toISOString() });
+  p.subtasks.push({ id: 'st' + Date.now() + Math.random().toString(36).slice(2,6), title, done: false, priority: false, from: '', due: '', link: '', notes: '', created: new Date().toISOString() });
   persist();
   renderProjects(); // keeps add row open for rapid entry
 }
@@ -1296,7 +1305,7 @@ function submitProject() {
   if (!title) { document.getElementById('proj-popup-name').focus(); return; }
   const subtasks = projPopupSubtasks.filter(t => t.trim()).map(t => ({
     id: 'st' + Date.now() + Math.random().toString(36).slice(2,6),
-    title: t.trim(), done: false, priority: false, from: '', due: '', notes: '',
+    title: t.trim(), done: false, priority: false, from: '', due: '', link: '', notes: '',
     created: new Date().toISOString()
   }));
   projects.unshift({

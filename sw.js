@@ -1,4 +1,4 @@
-const CACHE = 'tasks-v8';
+const CACHE = 'tasks-v9';
 
 // Only cache the heavy, never-changing assets
 const STATIC_ASSETS = [
