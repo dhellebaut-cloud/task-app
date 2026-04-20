@@ -1094,6 +1094,7 @@ function renderProjectCard(p) {
   const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
   const isComplete = total > 0 && done === total;
   const barColor   = isComplete ? '#1d9e75' : p.color;
+  const dl         = p.deadline ? dueTxt(p.deadline) : null;
 
   const subtasksHtml = p.collapsed ? '' : p.subtasks.map(s => renderSubtaskRow(p.id, s)).join('');
 
@@ -1110,17 +1111,26 @@ function renderProjectCard(p) {
          </button>`
   ) : '';
 
+  const deadlineRow = !p.collapsed ? `
+    <div class="proj-deadline-row">
+      <span class="proj-deadline-lbl">Deadline</span>
+      <input class="proj-deadline-input" type="date" value="${p.deadline||''}"
+             onclick="event.stopPropagation()"
+             onchange="updateProjectField('${p.id}','deadline',this.value)" />
+    </div>` : '';
+
   return `<div class="proj-card" id="proj-${p.id}">
     <div class="proj-hdr" onclick="toggleProject('${p.id}')">
       <svg class="proj-arrow${p.collapsed ? '' : ' open'}" width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,2.5 4,5.5 6.5,2.5"/></svg>
       <span class="proj-dot" style="background:${p.color}"></span>
       <span class="proj-name">${esc(p.title)}</span>
       ${isComplete ? '<span class="proj-complete-tag">Completed</span>' : ''}
+      ${dl ? `<span class="proj-dl-chip${dl.cls ? ' ' + dl.cls : ''}">${dl.label}</span>` : ''}
       <span class="proj-count">${done}/${total}</span>
       <button class="proj-archive-btn" onclick="event.stopPropagation();archiveProject('${p.id}')" title="Archive">Archive</button>
     </div>
     <div class="proj-prog-wrap"><div class="proj-prog-bar" style="width:${pct}%;background:${barColor}"></div></div>
-    ${!p.collapsed ? `<div class="proj-body">${subtasksHtml}${addHtml}</div>` : ''}
+    ${!p.collapsed ? `<div class="proj-body">${deadlineRow}${subtasksHtml}${addHtml}</div>` : ''}
   </div>`;
 }
 
@@ -1151,9 +1161,6 @@ function renderSubtaskRow(projectId, s) {
         <div class="pfl">Link</div>
         <input class="sp-input" type="url" value="${esc(s.link||'')}" placeholder="https://drive.google.com/..."
                onchange="updateSubtaskField('${projectId}','${s.id}','link',this.value)" />
-      </div>
-      <div class="proj-st-save-row">
-        <button class="proj-st-save-btn" onclick="toggleSubtaskExpand('${s.id}')">Save</button>
       </div>
     </div>` : '';
 
@@ -1213,6 +1220,14 @@ function updateSubtaskField(projectId, subtaskId, field, value) {
   persist();
 }
 
+function updateProjectField(projectId, field, value) {
+  const p = projects.find(x => x.id === projectId);
+  if (!p) return;
+  p[field] = value;
+  persist();
+  renderProjects();
+}
+
 function openInlineSubtask(projectId) {
   addingSubtaskProjectId = projectId;
   inlineSubtaskPriority  = false;
@@ -1266,7 +1281,8 @@ function archiveProject(id) {
 function openProjectPopup() {
   projPopupSubtasks = [];
   selProjectColor = 'teal';
-  document.getElementById('proj-popup-name').value = '';
+  document.getElementById('proj-popup-name').value     = '';
+  document.getElementById('proj-popup-deadline').value = '';
   renderProjectPopupSubtasks();
   renderColorPicker('proj-popup-colors', selProjectColor, id => {
     selProjectColor = id;
@@ -1313,15 +1329,16 @@ function removeProjPopupSubtask(i) {
 }
 
 function submitProject() {
-  const title = document.getElementById('proj-popup-name').value.trim();
+  const title    = document.getElementById('proj-popup-name').value.trim();
   if (!title) { document.getElementById('proj-popup-name').focus(); return; }
+  const deadline = document.getElementById('proj-popup-deadline').value || '';
   const subtasks = projPopupSubtasks.filter(t => t.trim()).map(t => ({
     id: 'st' + Date.now() + Math.random().toString(36).slice(2,6),
     title: t.trim(), done: false, priority: false, from: '', due: '', link: '', notes: '',
     created: new Date().toISOString()
   }));
   projects.unshift({
-    id: 'p' + Date.now(), title, color: gc(selProjectColor),
+    id: 'p' + Date.now(), title, color: gc(selProjectColor), deadline,
     subtasks, collapsed: true, archived: false, created: new Date().toISOString()
   });
   persist();

@@ -1080,6 +1080,16 @@ button.sec-pill { cursor: pointer; }
 }
 .proj-popup-add-st:hover { color: var(--t1); }
 
+/* ── Section label ── */
+.section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--t3);
+  padding: 6px 20px 4px;
+}
+
 /* ── Project cards ── */
 #plist { padding: 0 10px 8px; }
 .proj-card {
@@ -1147,6 +1157,41 @@ button.sec-pill { cursor: pointer; }
   flex-shrink: 0;
 }
 .proj-archive-btn:hover { color: var(--t1); border-color: var(--t3); }
+.proj-dl-chip {
+  font-size: 10px;
+  color: var(--t2);
+  background: var(--bg2);
+  border-radius: 5px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+.proj-dl-chip.ov { color: #f09595; background: rgba(240,149,149,.1); }
+.proj-dl-chip.sn { color: #fac775; background: rgba(250,199,117,.1); }
+.proj-deadline-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px 4px;
+  border-bottom: .5px solid var(--b);
+  margin-bottom: 4px;
+}
+.proj-deadline-lbl {
+  font-size: 10px;
+  color: var(--t3);
+  font-weight: 500;
+  min-width: 54px;
+}
+.proj-deadline-input {
+  background: none;
+  border: none;
+  color: var(--t2);
+  font-size: 11px;
+  font-family: var(--sans);
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+}
+.proj-deadline-input::-webkit-calendar-picker-indicator { filter: invert(.5); cursor: pointer; }
 .proj-prog-wrap {
   height: 3px;
   background: var(--bg2);
@@ -1228,24 +1273,6 @@ button.sec-pill { cursor: pointer; }
   padding: 4px 8px 8px 25px;
 }
 .proj-st-extra .pf { margin-bottom: 6px; }
-.proj-st-save-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 6px;
-}
-.proj-st-save-btn {
-  background: var(--ac2);
-  border: none;
-  border-radius: 5px;
-  color: #cbc8f5;
-  font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 500;
-  padding: 4px 12px;
-  cursor: pointer;
-  transition: background .15s;
-}
-.proj-st-save-btn:hover { background: var(--ac); }
 .proj-st-prio-flag {
   width: 13px;
   height: 13px;
