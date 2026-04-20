@@ -59,10 +59,17 @@
             <div class="plus-icon"></div>
             Add task
           </button>
+          <button class="add-proj-btn" onclick="openProjectPopup()">
+            <div class="plus-icon"></div>
+            Add project
+          </button>
         </div>
 
         <!-- Links shelf -->
         <div id="links-shelf"></div>
+
+        <!-- Projects -->
+        <div id="plist"></div>
 
         <!-- Task list -->
         <div id="tlist"></div>
@@ -233,7 +240,35 @@
     </div><!-- /#settings-panel -->
   </div><!-- /#settings-overlay -->
 
-<script src="app.js"></script>
+  <!-- ── PROJECT POPUP ── -->
+  <div id="proj-overlay" onclick="projOverlayClick(event)">
+    <div id="proj-popup">
+      <div class="pop-hdr">
+        <span class="pop-title">New project</span>
+        <button class="close-btn" onclick="closeProjectPopup()">×</button>
+      </div>
+      <div class="pop-body">
+        <div class="pf">
+          <input id="proj-popup-name" type="text" placeholder="Project name..."
+                 onkeydown="if(event.key==='Enter')document.querySelector('.proj-popup-add-st').click()" />
+        </div>
+        <div class="pf">
+          <div class="pfl">Colour</div>
+          <div class="crow" id="proj-popup-colors"></div>
+        </div>
+        <div class="pf">
+          <div class="pfl">Subtasks</div>
+          <div id="proj-popup-subtasks"></div>
+        </div>
+      </div>
+      <div class="pop-footer">
+        <button class="btn-cancel" onclick="closeProjectPopup()">Cancel</button>
+        <button class="btn-add" onclick="submitProject()">Create project</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js');

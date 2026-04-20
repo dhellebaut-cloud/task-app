@@ -38,6 +38,7 @@ function renderAll() {
   setFilter(activeFilter);
   renderProfileBar();
   renderLinksShelf();
+  renderProjects();
   document.getElementById('date-bar').textContent =
     new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }
@@ -140,6 +141,11 @@ let people                 = [];
 let links                  = [];
 let linksExpanded          = false;
 let linksAddOpen           = false;
+let projects               = [];
+let selProjectColor        = 'teal';
+let projPopupSubtasks      = [];
+let addingSubtaskProjectId = null;
+let expandedSubtaskIds     = new Set();
 let activeSettingsSection  = 'general';
 let prioChecked  = false;    // state of priority checkbox in popup
 let dueSel       = '';       // '' | 'today' | 'week' | 'date'
@@ -151,8 +157,9 @@ function persist() {
     localStorage.setItem('tasks-app:groups',  JSON.stringify(groups));
     localStorage.setItem('tasks-app:people',  JSON.stringify(people));
     localStorage.setItem('tasks-app:profile', JSON.stringify(profile));
-    localStorage.setItem('tasks-app:links',   JSON.stringify(links));
-    localStorage.setItem('tasks-app:nextId',  String(nextId));
+    localStorage.setItem('tasks-app:links',    JSON.stringify(links));
+    localStorage.setItem('tasks-app:projects', JSON.stringify(projects));
+    localStorage.setItem('tasks-app:nextId',   String(nextId));
   } catch (_) { /* storage unavailable */ }
 }
 
@@ -168,8 +175,10 @@ function loadFromStorage() {
     if (g)  groups  = JSON.parse(g);
     if (pe) people  = JSON.parse(pe);
     if (pr) profile = JSON.parse(pr);
-    if (li) links   = JSON.parse(li);
-    if (n)  nextId  = parseInt(n, 10) || 1;
+    if (li) links    = JSON.parse(li);
+    const pj = localStorage.getItem('tasks-app:projects');
+    if (pj) projects = JSON.parse(pj);
+    if (n)  nextId   = parseInt(n, 10) || 1;
   } catch (_) { /* ignore corrupt data */ }
 }
 
@@ -272,6 +281,7 @@ function setFilter(f) {
     document.getElementById('pill-' + x).classList.toggle('active', activeFilter === x);
   });
   renderList();
+  renderProjects();
 }
 
 /* ── Group tab bar ── */
@@ -529,7 +539,7 @@ function saveProfile() {
 
 /* ── Export / Import ── */
 function exportData() {
-  const payload = JSON.stringify({ tasks, groups, people, profile, links, nextId }, null, 2);
+  const payload = JSON.stringify({ tasks, groups, people, profile, links, projects, nextId }, null, 2);
   const blob = new Blob([payload], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -553,8 +563,9 @@ function importData() {
         if (d.groups)  groups  = d.groups;
         if (d.people)  people  = d.people;
         if (d.profile) profile = d.profile;
-        if (d.links)   links   = d.links;
-        if (d.nextId)  nextId  = d.nextId;
+        if (d.links)     links    = d.links;
+        if (d.projects)  projects = d.projects;
+        if (d.nextId)    nextId   = d.nextId;
         persist();
         renderAll();
         openSettings('general');
@@ -1057,6 +1068,244 @@ function pingPerson(personId) {
     ? `https://slack.com/app_redirect?channel=${p.slackId}&team=${team}`
     : `https://slack.com/app_redirect?channel=${p.slackId}`;
   window.open(url, '_blank');
+}
+
+/* ── Projects ── */
+function renderProjects() {
+  const el = document.getElementById('plist');
+  if (!el) return;
+  const visible = projects.filter(p =>
+    activeFilter === 'all' ? true :
+    activeFilter === 'done' ? p.archived :
+    !p.archived
+  );
+  el.innerHTML = visible.map(p => renderProjectCard(p)).join('');
+  // re-focus inline add input if open
+  if (addingSubtaskProjectId) {
+    const inp = document.getElementById('proj-st-input-' + addingSubtaskProjectId);
+    if (inp) inp.focus();
+  }
+}
+
+function renderProjectCard(p) {
+  const total = p.subtasks.length;
+  const done  = p.subtasks.filter(s => s.done).length;
+  const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
+  const isComplete = total > 0 && done === total;
+  const barColor   = isComplete ? '#1d9e75' : p.color;
+
+  const subtasksHtml = p.collapsed ? '' : p.subtasks.map(s => renderSubtaskRow(p.id, s)).join('');
+
+  const addHtml = !p.collapsed ? (
+    addingSubtaskProjectId === p.id
+      ? `<div class="proj-st-add-row">
+           <input class="proj-st-add-input" id="proj-st-input-${p.id}" type="text" placeholder="New subtask..."
+                  onkeydown="if(event.key==='Enter')submitInlineSubtask('${p.id}');if(event.key==='Escape')closeInlineSubtask()" />
+         </div>`
+      : `<button class="proj-add-st-btn" onclick="openInlineSubtask('${p.id}')">
+           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+           Add subtask
+         </button>`
+  ) : '';
+
+  return `<div class="proj-card" id="proj-${p.id}">
+    <div class="proj-hdr" onclick="toggleProject('${p.id}')">
+      <svg class="proj-arrow${p.collapsed ? '' : ' open'}" width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,2.5 4,5.5 6.5,2.5"/></svg>
+      <span class="proj-dot" style="background:${p.color}"></span>
+      <span class="proj-name">${esc(p.title)}</span>
+      ${isComplete ? '<span class="proj-complete-tag">Completed</span>' : ''}
+      <span class="proj-count">${done}/${total}</span>
+      <button class="proj-archive-btn" onclick="event.stopPropagation();archiveProject('${p.id}')" title="Archive">Archive</button>
+    </div>
+    <div class="proj-prog-wrap"><div class="proj-prog-bar" style="width:${pct}%;background:${barColor}"></div></div>
+    ${!p.collapsed ? `<div class="proj-body">${subtasksHtml}${addHtml}</div>` : ''}
+  </div>`;
+}
+
+function renderSubtaskRow(projectId, s) {
+  const expanded = expandedSubtaskIds.has(s.id);
+  const extra = expanded ? `
+    <div class="proj-st-extra">
+      <div class="prio-row">
+        <div class="prio-chk-box${s.priority ? ' on' : ''}" onclick="toggleSubtaskPrio('${projectId}','${s.id}')"><div class="tick"></div></div>
+        <span class="prio-label" onclick="toggleSubtaskPrio('${projectId}','${s.id}')">Priority</span>
+      </div>
+      <div class="pf">
+        <div class="pfl">From</div>
+        <input class="sp-input" type="text" value="${esc(s.from||'')}" placeholder="Name or team"
+               onchange="updateSubtaskField('${projectId}','${s.id}','from',this.value)" />
+      </div>
+      <div class="pf">
+        <div class="pfl">Due date</div>
+        <input class="sp-input" type="date" value="${s.due||''}"
+               onchange="updateSubtaskField('${projectId}','${s.id}','due',this.value)" />
+      </div>
+      <div class="pf">
+        <div class="pfl">Notes</div>
+        <textarea class="sp-input" rows="2" placeholder="Notes..."
+                  onchange="updateSubtaskField('${projectId}','${s.id}','notes',this.value)">${esc(s.notes||'')}</textarea>
+      </div>
+    </div>` : '';
+
+  return `<div class="proj-st${s.done ? ' done' : ''}">
+    <div class="proj-st-row">
+      <div class="proj-st-check${s.done ? ' on' : ''}" onclick="toggleSubtaskDone('${projectId}','${s.id}')">
+        ${s.done ? `<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg>` : ''}
+      </div>
+      <span class="proj-st-title">${esc(s.title)}</span>
+      <button class="proj-st-expand-btn" onclick="toggleSubtaskExpand('${s.id}')">
+        <svg class="proj-st-arr${expanded ? ' open' : ''}" width="7" height="7" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,2.5 4,5.5 6.5,2.5"/></svg>
+      </button>
+      <button class="proj-st-del" onclick="deleteSubtask('${projectId}','${s.id}')">×</button>
+    </div>
+    ${extra}
+  </div>`;
+}
+
+function toggleProject(id) {
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  p.collapsed = !p.collapsed;
+  if (p.collapsed && addingSubtaskProjectId === id) addingSubtaskProjectId = null;
+  persist();
+  renderProjects();
+}
+
+function toggleSubtaskDone(projectId, subtaskId) {
+  const p = projects.find(x => x.id === projectId);
+  const s = p?.subtasks.find(x => x.id === subtaskId);
+  if (!s) return;
+  s.done = !s.done;
+  persist();
+  renderProjects();
+}
+
+function toggleSubtaskExpand(subtaskId) {
+  expandedSubtaskIds.has(subtaskId) ? expandedSubtaskIds.delete(subtaskId) : expandedSubtaskIds.add(subtaskId);
+  renderProjects();
+}
+
+function toggleSubtaskPrio(projectId, subtaskId) {
+  const p = projects.find(x => x.id === projectId);
+  const s = p?.subtasks.find(x => x.id === subtaskId);
+  if (!s) return;
+  s.priority = !s.priority;
+  persist();
+  renderProjects();
+}
+
+function updateSubtaskField(projectId, subtaskId, field, value) {
+  const p = projects.find(x => x.id === projectId);
+  const s = p?.subtasks.find(x => x.id === subtaskId);
+  if (!s) return;
+  s[field] = value;
+  persist();
+}
+
+function openInlineSubtask(projectId) {
+  addingSubtaskProjectId = projectId;
+  renderProjects();
+}
+
+function closeInlineSubtask() {
+  addingSubtaskProjectId = null;
+  renderProjects();
+}
+
+function submitInlineSubtask(projectId) {
+  const inp = document.getElementById('proj-st-input-' + projectId);
+  if (!inp) return;
+  const title = inp.value.trim();
+  if (!title) { closeInlineSubtask(); return; }
+  const p = projects.find(x => x.id === projectId);
+  if (!p) return;
+  p.subtasks.push({ id: 'st' + Date.now() + Math.random().toString(36).slice(2,6), title, done: false, priority: false, from: '', due: '', notes: '', created: new Date().toISOString() });
+  persist();
+  renderProjects(); // keeps add row open for rapid entry
+}
+
+function deleteSubtask(projectId, subtaskId) {
+  const p = projects.find(x => x.id === projectId);
+  if (!p) return;
+  p.subtasks = p.subtasks.filter(s => s.id !== subtaskId);
+  expandedSubtaskIds.delete(subtaskId);
+  persist();
+  renderProjects();
+}
+
+function archiveProject(id) {
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+  p.archived = !p.archived;
+  persist();
+  renderProjects();
+}
+
+/* ── Project popup ── */
+function openProjectPopup() {
+  projPopupSubtasks = [];
+  selProjectColor = 'teal';
+  document.getElementById('proj-popup-name').value = '';
+  renderProjectPopupSubtasks();
+  renderColorPicker('proj-popup-colors', selProjectColor, id => {
+    selProjectColor = id;
+    renderColorPicker('proj-popup-colors', selProjectColor, () => {});
+  });
+  document.getElementById('proj-overlay').classList.add('vis');
+  setTimeout(() => document.getElementById('proj-popup-name').focus(), 50);
+}
+
+function closeProjectPopup() {
+  document.getElementById('proj-overlay').classList.remove('vis');
+}
+
+function projOverlayClick(e) {
+  if (e.target === document.getElementById('proj-overlay')) closeProjectPopup();
+}
+
+function renderProjectPopupSubtasks() {
+  const el = document.getElementById('proj-popup-subtasks');
+  if (!el) return;
+  el.innerHTML = projPopupSubtasks.map((t, i) => `
+    <div class="proj-popup-st-row">
+      <input class="sp-input proj-popup-st-input" type="text" value="${esc(t)}" placeholder="Subtask title..."
+             oninput="projPopupSubtasks[${i}]=this.value"
+             onkeydown="if(event.key==='Enter')addProjPopupSubtask()" />
+      <button class="proj-popup-st-del" onclick="removeProjPopupSubtask(${i})">×</button>
+    </div>`).join('') +
+    `<button class="proj-popup-add-st" onclick="addProjPopupSubtask()">
+       <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+       Add subtask
+     </button>`;
+}
+
+function addProjPopupSubtask() {
+  projPopupSubtasks.push('');
+  renderProjectPopupSubtasks();
+  const inputs = document.querySelectorAll('.proj-popup-st-input');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+function removeProjPopupSubtask(i) {
+  projPopupSubtasks.splice(i, 1);
+  renderProjectPopupSubtasks();
+}
+
+function submitProject() {
+  const title = document.getElementById('proj-popup-name').value.trim();
+  if (!title) { document.getElementById('proj-popup-name').focus(); return; }
+  const subtasks = projPopupSubtasks.filter(t => t.trim()).map(t => ({
+    id: 'st' + Date.now() + Math.random().toString(36).slice(2,6),
+    title: t.trim(), done: false, priority: false, from: '', due: '', notes: '',
+    created: new Date().toISOString()
+  }));
+  projects.unshift({
+    id: 'p' + Date.now(), title, color: gc(selProjectColor),
+    subtasks, collapsed: true, archived: false, created: new Date().toISOString()
+  });
+  persist();
+  renderProjects();
+  closeProjectPopup();
 }
 
 /* ── Boot ── */
