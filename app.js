@@ -1170,8 +1170,12 @@ function renderSubtaskRow(projectId, s, projColor) {
       </div>
       <div class="pf">
         <div class="pfl">Link</div>
-        <input class="sp-input" type="url" value="${esc(s.link||'')}" placeholder="https://drive.google.com/..."
-               onchange="updateSubtaskField('${projectId}','${s.id}','link',this.value)" />
+        <div class="proj-st-link-row">
+          <input class="sp-input" type="url" value="${esc(s.link||'')}" placeholder="https://drive.google.com/..."
+                 onchange="updateSubtaskField('${projectId}','${s.id}','link',this.value)" />
+          ${s.link ? `<a class="proj-st-link-open" href="${esc(s.link)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="Open link">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></a>` : ''}
+        </div>
       </div>
     </div>` : '';
 
@@ -1185,6 +1189,8 @@ function renderSubtaskRow(projectId, s, projColor) {
       ${s.priority ? '<span class="proj-st-prio-flag">!</span>' : ''}
       <span class="proj-st-title">${esc(s.title)}</span>
       ${dueHtml}
+      ${s.link ? `<a class="proj-st-link-icon" href="${esc(s.link)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="Open link">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></a>` : ''}
       <button class="proj-st-del" onclick="event.stopPropagation();deleteSubtask('${projectId}','${s.id}')">×</button>
     </div>
     ${extra}

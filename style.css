@@ -1271,6 +1271,29 @@ button.sec-pill { cursor: pointer; }
 }
 .proj-st-due.ov { color: #f09595; }
 .proj-st-due.sn { color: #fac775; }
+.proj-st-link-icon {
+  display: flex;
+  align-items: center;
+  color: var(--t3);
+  flex-shrink: 0;
+  transition: color .12s;
+}
+.proj-st-link-icon:hover { color: var(--ac3); }
+.proj-st-link-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+.proj-st-link-row .sp-input { flex: 1; }
+.proj-st-link-open {
+  display: flex;
+  align-items: center;
+  color: var(--t3);
+  flex-shrink: 0;
+  transition: color .12s;
+}
+.proj-st-link-open:hover { color: var(--ac3); }
 .proj-st.done .proj-st-title {
   text-decoration: line-through;
   color: var(--t3);
