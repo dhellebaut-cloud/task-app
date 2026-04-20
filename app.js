@@ -1123,10 +1123,11 @@ function renderProjectCard(p) {
     <div class="proj-hdr" onclick="toggleProject('${p.id}')">
       <svg class="proj-arrow${p.collapsed ? '' : ' open'}" width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,2.5 4,5.5 6.5,2.5"/></svg>
       <span class="proj-dot" style="background:${p.color}"></span>
-      <input class="proj-name-input" value="${esc(p.title)}"
+      <input class="proj-name-input" value="${esc(p.title)}" size="${Math.max(p.title.length, 3)}"
              onclick="event.stopPropagation()"
+             oninput="this.size=Math.max(this.value.length,3)"
              onblur="updateProjectField('${p.id}','title',this.value.trim()||'${esc(p.title)}')"
-             onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){this.value='${esc(p.title)}';this.blur()}" />
+             onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){this.value='${esc(p.title)}';this.size=${Math.max(p.title.length,3)};this.blur()}" />
       ${isComplete ? '<span class="proj-complete-tag">Completed</span>' : ''}
       ${dl ? `<span class="proj-dl-chip${dl.cls ? ' ' + dl.cls : ''}">${dl.label}</span>` : ''}
       <span class="proj-count">${done}/${total}</span>

@@ -218,7 +218,7 @@ body {
   display: flex;
   justify-content: center;
   gap: 8px;
-  padding: 10px 0;
+  padding: 10px 0 18px;
 }
 
 /* ── Content width cap ── */
@@ -1129,8 +1129,9 @@ button.sec-pill { cursor: pointer; }
   flex: 1;
 }
 .proj-name-input {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
+  width: auto;
   background: none;
   border: none;
   outline: none;
