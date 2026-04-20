@@ -1218,6 +1218,26 @@ button.sec-pill { cursor: pointer; }
   outline: none;
 }
 .proj-deadline-input::-webkit-calendar-picker-indicator { filter: invert(.5); cursor: pointer; }
+.date-set-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.date-set-val {
+  font-size: 11px;
+  color: var(--t2);
+}
+.date-clear-btn {
+  background: none;
+  border: none;
+  color: var(--t3);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  transition: color .12s;
+}
+.date-clear-btn:hover { color: #f09595; }
 .proj-prog-wrap {
   height: 3px;
   background: var(--bg2);

@@ -1115,9 +1115,13 @@ function renderProjectCard(p) {
   const deadlineRow = !p.collapsed ? `
     <div class="proj-deadline-row">
       <span class="proj-deadline-lbl">Deadline</span>
-      <input class="proj-deadline-input" type="date" value="${p.deadline||''}"
-             onclick="event.stopPropagation()"
-             onchange="updateProjectField('${p.id}','deadline',this.value)" />
+      ${p.deadline
+        ? `<span class="date-set-val">${new Date(p.deadline + 'T00:00:00').toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'})}</span>
+           <button class="date-clear-btn" onclick="event.stopPropagation();updateProjectField('${p.id}','deadline','')">×</button>`
+        : `<input class="proj-deadline-input" type="date"
+                  onclick="event.stopPropagation()"
+                  onchange="if(this.value)updateProjectField('${p.id}','deadline',this.value)" />`
+      }
     </div>` : '';
 
   return `<div class="proj-card" id="proj-${p.id}">
@@ -1161,8 +1165,14 @@ function renderSubtaskRow(projectId, s, projColor) {
       </div>
       <div class="pf">
         <div class="pfl">Due date</div>
-        <input class="sp-input" type="date" value="${s.due||''}"
-               onchange="updateSubtaskField('${projectId}','${s.id}','due',this.value)" />
+        ${s.due
+          ? `<div class="date-set-wrap">
+               <span class="date-set-val">${new Date(s.due + 'T00:00:00').toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'})}</span>
+               <button class="date-clear-btn" onclick="updateSubtaskField('${projectId}','${s.id}','due','',true)">×</button>
+             </div>`
+          : `<input class="sp-input" type="date"
+                    onchange="if(this.value)updateSubtaskField('${projectId}','${s.id}','due',this.value,true)" />`
+        }
       </div>
       <div class="pf">
         <div class="pfl">Notes</div>
@@ -1229,12 +1239,13 @@ function toggleSubtaskPrio(projectId, subtaskId) {
   renderProjects();
 }
 
-function updateSubtaskField(projectId, subtaskId, field, value) {
+function updateSubtaskField(projectId, subtaskId, field, value, rerender = false) {
   const p = projects.find(x => x.id === projectId);
   const s = p?.subtasks.find(x => x.id === subtaskId);
   if (!s) return;
   s[field] = value;
   persist();
+  if (rerender) renderProjects();
 }
 
 function updateProjectField(projectId, field, value) {
