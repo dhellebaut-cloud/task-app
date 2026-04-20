@@ -1156,8 +1156,12 @@ button.sec-pill { cursor: pointer; }
   transition: opacity .12s, color .12s, background .12s, border-color .12s;
   flex-shrink: 0;
 }
-.proj-hdr:hover .proj-archive-btn { border-color: #a32d2d; color: #f09595; }
-.proj-archive-btn:hover { background: #a32d2d !important; border-color: #a32d2d !important; color: #fff !important; }
+.proj-hdr:hover .proj-archive-btn:not(.proj-revert-btn):not(.proj-delete-btn) { border-color: #a32d2d; color: #f09595; }
+.proj-archive-btn:not(.proj-revert-btn):not(.proj-delete-btn):hover { background: #a32d2d !important; border-color: #a32d2d !important; color: #fff !important; }
+.proj-revert-btn { opacity: 1 !important; border-color: #1d9e75 !important; color: #6fcf8e !important; }
+.proj-revert-btn:hover { background: #1d9e75 !important; border-color: #1d9e75 !important; color: #fff !important; }
+.proj-delete-btn { opacity: 1 !important; border-color: #a32d2d !important; color: #f09595 !important; }
+.proj-delete-btn:hover { background: #a32d2d !important; border-color: #a32d2d !important; color: #fff !important; }
 .proj-dl-chip {
   font-size: 10px;
   color: var(--t2);

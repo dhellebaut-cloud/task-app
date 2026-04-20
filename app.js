@@ -1127,7 +1127,11 @@ function renderProjectCard(p) {
       ${isComplete ? '<span class="proj-complete-tag">Completed</span>' : ''}
       ${dl ? `<span class="proj-dl-chip${dl.cls ? ' ' + dl.cls : ''}">${dl.label}</span>` : ''}
       <span class="proj-count">${done}/${total}</span>
-      <button class="proj-archive-btn" onclick="event.stopPropagation();archiveProject('${p.id}')" title="Archive">Archive</button>
+      ${p.archived
+        ? `<button class="proj-archive-btn proj-revert-btn" onclick="event.stopPropagation();archiveProject('${p.id}')" title="Move back to open">Revert</button>
+           <button class="proj-archive-btn proj-delete-btn" onclick="event.stopPropagation();deleteProject('${p.id}')" title="Delete permanently">Delete permanently</button>`
+        : `<button class="proj-archive-btn" onclick="event.stopPropagation();archiveProject('${p.id}')" title="Archive">Archive</button>`
+      }
     </div>
     <div class="proj-prog-wrap"><div class="proj-prog-bar" style="width:${pct}%;background:${barColor}"></div></div>
     ${!p.collapsed ? `<div class="proj-body">${deadlineRow}${subtasksHtml}${addHtml}</div>` : ''}
@@ -1273,6 +1277,12 @@ function archiveProject(id) {
   const p = projects.find(x => x.id === id);
   if (!p) return;
   p.archived = !p.archived;
+  persist();
+  renderProjects();
+}
+
+function deleteProject(id) {
+  projects = projects.filter(x => x.id !== id);
   persist();
   renderProjects();
 }
