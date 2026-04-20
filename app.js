@@ -1065,10 +1065,11 @@ function pingPerson(personId) {
   const p = people.find(x => x.id === personId);
   if (!p?.slackId) return;
   const team = profile.slackTeamId;
+  // slack:// deep link opens the app directly without the redirect webpage
   const url = team
-    ? `https://slack.com/app_redirect?channel=${p.slackId}&team=${team}`
-    : `https://slack.com/app_redirect?channel=${p.slackId}`;
-  window.open(url, '_blank');
+    ? `slack://user?team=${team}&id=${p.slackId}`
+    : `slack://user?id=${p.slackId}`;
+  window.location.href = url;
 }
 
 /* ── Projects ── */
