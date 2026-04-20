@@ -1086,8 +1086,8 @@ button.sec-pill { cursor: pointer; }
   font-weight: 600;
   letter-spacing: .06em;
   text-transform: uppercase;
-  color: var(--t3);
-  padding: 6px 20px 4px;
+  color: var(--t2);
+  padding: 14px 20px 4px;
 }
 
 /* ── Project cards ── */
@@ -1153,10 +1153,11 @@ button.sec-pill { cursor: pointer; }
   font-family: var(--sans);
   padding: 3px 8px;
   cursor: pointer;
-  transition: opacity .12s, color .12s;
+  transition: opacity .12s, color .12s, background .12s, border-color .12s;
   flex-shrink: 0;
 }
-.proj-archive-btn:hover { color: var(--t1); border-color: var(--t3); }
+.proj-hdr:hover .proj-archive-btn { border-color: #a32d2d; color: #f09595; }
+.proj-archive-btn:hover { background: #a32d2d !important; border-color: #a32d2d !important; color: #fff !important; }
 .proj-dl-chip {
   font-size: 10px;
   color: var(--t2);
