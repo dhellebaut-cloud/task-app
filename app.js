@@ -144,8 +144,9 @@ let linksAddOpen           = false;
 let projects               = [];
 let selProjectColor        = 'teal';
 let projPopupSubtasks      = [];
-let addingSubtaskProjectId = null;
-let expandedSubtaskIds     = new Set();
+let addingSubtaskProjectId  = null;
+let inlineSubtaskPriority   = false;
+let expandedSubtaskIds      = new Set();
 let activeSettingsSection  = 'general';
 let prioChecked  = false;    // state of priority checkbox in popup
 let dueSel       = '';       // '' | 'today' | 'week' | 'date'
@@ -1099,6 +1100,7 @@ function renderProjectCard(p) {
   const addHtml = !p.collapsed ? (
     addingSubtaskProjectId === p.id
       ? `<div class="proj-st-add-row">
+           <div class="proj-st-add-prio${inlineSubtaskPriority ? ' on' : ''}" onclick="toggleInlineSubtaskPriority()" title="Mark as priority"><div class="tick"></div></div>
            <input class="proj-st-add-input" id="proj-st-input-${p.id}" type="text" placeholder="New subtask..."
                   onkeydown="if(event.key==='Enter')submitInlineSubtask('${p.id}');if(event.key==='Escape')closeInlineSubtask()" />
          </div>`
@@ -1123,8 +1125,8 @@ function renderProjectCard(p) {
 }
 
 function renderSubtaskRow(projectId, s) {
-  const expanded = expandedSubtaskIds.has(s.id);
-  const extra = expanded ? `
+  const editing = expandedSubtaskIds.has(s.id);
+  const extra = editing ? `
     <div class="proj-st-extra">
       <div class="prio-row">
         <div class="prio-chk-box${s.priority ? ' on' : ''}" onclick="toggleSubtaskPrio('${projectId}','${s.id}')"><div class="tick"></div></div>
@@ -1141,31 +1143,31 @@ function renderSubtaskRow(projectId, s) {
                onchange="updateSubtaskField('${projectId}','${s.id}','due',this.value)" />
       </div>
       <div class="pf">
-        <div class="pfl">Link</div>
-        <input class="sp-input" type="url" value="${esc(s.link||'')}" placeholder="https://drive.google.com/..."
-               onchange="updateSubtaskField('${projectId}','${s.id}','link',this.value)" />
-      </div>
-      <div class="pf">
         <div class="pfl">Notes</div>
         <textarea class="sp-input" rows="2" placeholder="Notes..."
                   onchange="updateSubtaskField('${projectId}','${s.id}','notes',this.value)">${esc(s.notes||'')}</textarea>
+      </div>
+      <div class="pf">
+        <div class="pfl">Link</div>
+        <input class="sp-input" type="url" value="${esc(s.link||'')}" placeholder="https://drive.google.com/..."
+               onchange="updateSubtaskField('${projectId}','${s.id}','link',this.value)" />
       </div>
       <div class="proj-st-save-row">
         <button class="proj-st-save-btn" onclick="toggleSubtaskExpand('${s.id}')">Save</button>
       </div>
     </div>` : '';
 
-  return `<div class="proj-st${s.done ? ' done' : ''}">
-    <div class="proj-st-row" onclick="toggleSubtaskExpand('${s.id}')">
-      <div class="proj-st-check${s.done ? ' on' : ''}" onclick="event.stopPropagation();toggleSubtaskDone('${projectId}','${s.id}')">
+  return `<div class="proj-st${s.done ? ' done' : ''}${editing ? ' editing' : ''}">
+    <div class="proj-st-row">
+      <div class="proj-st-check${s.done ? ' on' : ''}" onclick="toggleSubtaskDone('${projectId}','${s.id}')">
         ${s.done ? `<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg>` : ''}
       </div>
       ${s.priority ? '<span class="proj-st-prio-flag">!</span>' : ''}
       <span class="proj-st-title">${esc(s.title)}</span>
-      <button class="proj-st-expand-btn" onclick="event.stopPropagation();toggleSubtaskExpand('${s.id}')">
-        <svg class="proj-st-arr${expanded ? ' open' : ''}" width="7" height="7" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,2.5 4,5.5 6.5,2.5"/></svg>
+      <button class="proj-st-edit-btn" onclick="toggleSubtaskExpand('${s.id}')" title="Edit">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
       </button>
-      <button class="proj-st-del" onclick="event.stopPropagation();deleteSubtask('${projectId}','${s.id}')">×</button>
+      <button class="proj-st-del" onclick="deleteSubtask('${projectId}','${s.id}')">×</button>
     </div>
     ${extra}
   </div>`;
@@ -1213,12 +1215,21 @@ function updateSubtaskField(projectId, subtaskId, field, value) {
 
 function openInlineSubtask(projectId) {
   addingSubtaskProjectId = projectId;
+  inlineSubtaskPriority  = false;
   renderProjects();
 }
 
 function closeInlineSubtask() {
   addingSubtaskProjectId = null;
+  inlineSubtaskPriority  = false;
   renderProjects();
+}
+
+function toggleInlineSubtaskPriority() {
+  inlineSubtaskPriority = !inlineSubtaskPriority;
+  // re-render just the prio toggle without losing focus
+  const btn = document.querySelector('.proj-st-add-prio');
+  if (btn) btn.classList.toggle('on', inlineSubtaskPriority);
 }
 
 function submitInlineSubtask(projectId) {
@@ -1228,7 +1239,8 @@ function submitInlineSubtask(projectId) {
   if (!title) { closeInlineSubtask(); return; }
   const p = projects.find(x => x.id === projectId);
   if (!p) return;
-  p.subtasks.push({ id: 'st' + Date.now() + Math.random().toString(36).slice(2,6), title, done: false, priority: false, from: '', due: '', link: '', notes: '', created: new Date().toISOString() });
+  p.subtasks.push({ id: 'st' + Date.now() + Math.random().toString(36).slice(2,6), title, done: false, priority: inlineSubtaskPriority, from: '', due: '', link: '', notes: '', created: new Date().toISOString() });
+  inlineSubtaskPriority = false;
   persist();
   renderProjects(); // keeps add row open for rapid entry
 }

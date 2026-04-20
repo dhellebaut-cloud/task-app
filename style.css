@@ -1170,9 +1170,8 @@ button.sec-pill { cursor: pointer; }
   align-items: center;
   gap: 7px;
   padding: 5px 4px;
-  cursor: pointer;
+  cursor: default;
 }
-.proj-st:hover .proj-st-del { opacity: 1; }
 .proj-st-check {
   width: 14px;
   height: 14px;
@@ -1200,20 +1199,20 @@ button.sec-pill { cursor: pointer; }
   text-decoration: line-through;
   color: var(--t3);
 }
-.proj-st-expand-btn {
+.proj-st-edit-btn {
+  opacity: 0;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 2px;
+  padding: 2px 3px;
   display: flex;
   align-items: center;
   color: var(--t3);
+  transition: opacity .12s, color .12s;
+  flex-shrink: 0;
 }
-.proj-st-arr {
-  transform: rotate(-90deg);
-  transition: transform .15s;
-}
-.proj-st-arr.open { transform: rotate(0deg); }
+.proj-st-edit-btn:hover { color: var(--t1); }
+.proj-st.editing .proj-st-edit-btn { opacity: 1; color: var(--ac3); }
 .proj-st-del {
   opacity: 0;
   background: none;
@@ -1224,8 +1223,11 @@ button.sec-pill { cursor: pointer; }
   cursor: pointer;
   padding: 0 2px;
   transition: opacity .12s;
+  flex-shrink: 0;
 }
 .proj-st-del:hover { color: var(--t1); }
+.proj-st:hover .proj-st-edit-btn,
+.proj-st:hover .proj-st-del { opacity: 1; }
 .proj-st-extra {
   padding: 4px 8px 8px 25px;
 }
@@ -1263,11 +1265,33 @@ button.sec-pill { cursor: pointer; }
   justify-content: center;
 }
 .proj-st-add-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 4px 4px 2px;
 }
+.proj-st-add-prio {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1.5px solid var(--b2);
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .12s, border-color .12s;
+}
+.proj-st-add-prio.on {
+  background: #a32d2d;
+  border-color: #a32d2d;
+}
+.proj-st-add-prio.on .tick::before,
+.proj-st-add-prio.on .tick::after { background: #fff; }
+.proj-st-add-prio:hover { border-color: #a32d2d; }
 .proj-st-add-input {
-  width: 100%;
-  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
   background: var(--bg2);
   border: .5px solid var(--ac);
   border-radius: 5px;
