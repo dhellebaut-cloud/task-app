@@ -1100,7 +1100,7 @@ function renderProjectCard(p) {
   const addHtml = !p.collapsed ? (
     addingSubtaskProjectId === p.id
       ? `<div class="proj-st-add-row">
-           <div class="proj-st-add-prio${inlineSubtaskPriority ? ' on' : ''}" onclick="toggleInlineSubtaskPriority()" title="Mark as priority"><div class="tick"></div></div>
+           <div class="proj-st-add-prio${inlineSubtaskPriority ? ' on' : ''}" onclick="toggleInlineSubtaskPriority()" title="Mark as priority">!</div>
            <input class="proj-st-add-input" id="proj-st-input-${p.id}" type="text" placeholder="New subtask..."
                   onkeydown="if(event.key==='Enter')submitInlineSubtask('${p.id}');if(event.key==='Escape')closeInlineSubtask()" />
          </div>`
@@ -1158,16 +1158,16 @@ function renderSubtaskRow(projectId, s) {
     </div>` : '';
 
   return `<div class="proj-st${s.done ? ' done' : ''}${editing ? ' editing' : ''}">
-    <div class="proj-st-row">
-      <div class="proj-st-check${s.done ? ' on' : ''}" onclick="toggleSubtaskDone('${projectId}','${s.id}')">
+    <div class="proj-st-row" onclick="toggleSubtaskExpand('${s.id}')">
+      <div class="proj-st-check${s.done ? ' on' : ''}" onclick="event.stopPropagation();toggleSubtaskDone('${projectId}','${s.id}')">
         ${s.done ? `<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg>` : ''}
       </div>
       ${s.priority ? '<span class="proj-st-prio-flag">!</span>' : ''}
       <span class="proj-st-title">${esc(s.title)}</span>
-      <button class="proj-st-edit-btn" onclick="toggleSubtaskExpand('${s.id}')" title="Edit">
+      ${editing ? `<button class="proj-st-edit-btn" onclick="event.stopPropagation();toggleSubtaskExpand('${s.id}')" title="Close edit">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      </button>
-      <button class="proj-st-del" onclick="deleteSubtask('${projectId}','${s.id}')">×</button>
+      </button>` : ''}
+      <button class="proj-st-del" onclick="event.stopPropagation();deleteSubtask('${projectId}','${s.id}')">×</button>
     </div>
     ${extra}
   </div>`;

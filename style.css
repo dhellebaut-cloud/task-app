@@ -1170,7 +1170,7 @@ button.sec-pill { cursor: pointer; }
   align-items: center;
   gap: 7px;
   padding: 5px 4px;
-  cursor: default;
+  cursor: pointer;
 }
 .proj-st-check {
   width: 14px;
@@ -1200,19 +1200,16 @@ button.sec-pill { cursor: pointer; }
   color: var(--t3);
 }
 .proj-st-edit-btn {
-  opacity: 0;
   background: none;
   border: none;
   cursor: pointer;
   padding: 2px 3px;
   display: flex;
   align-items: center;
-  color: var(--t3);
-  transition: opacity .12s, color .12s;
+  color: var(--ac3);
   flex-shrink: 0;
 }
 .proj-st-edit-btn:hover { color: var(--t1); }
-.proj-st.editing .proj-st-edit-btn { opacity: 1; color: var(--ac3); }
 .proj-st-del {
   opacity: 0;
   background: none;
@@ -1226,7 +1223,6 @@ button.sec-pill { cursor: pointer; }
   flex-shrink: 0;
 }
 .proj-st-del:hover { color: var(--t1); }
-.proj-st:hover .proj-st-edit-btn,
 .proj-st:hover .proj-st-del { opacity: 1; }
 .proj-st-extra {
   padding: 4px 8px 8px 25px;
@@ -1280,15 +1276,17 @@ button.sec-pill { cursor: pointer; }
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background .12s, border-color .12s;
+  font-size: 10px;
+  font-weight: 800;
+  color: transparent;
+  transition: background .12s, border-color .12s, color .12s;
 }
 .proj-st-add-prio.on {
   background: #a32d2d;
   border-color: #a32d2d;
+  color: #fff;
 }
-.proj-st-add-prio.on .tick::before,
-.proj-st-add-prio.on .tick::after { background: #fff; }
-.proj-st-add-prio:hover { border-color: #a32d2d; }
+.proj-st-add-prio:hover { border-color: #a32d2d; color: rgba(163,45,45,.5); }
 .proj-st-add-input {
   flex: 1;
   min-width: 0;
