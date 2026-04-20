@@ -896,6 +896,9 @@ button.sec-pill { cursor: pointer; }
   transition: border-color .15s;
 }
 .due-date-pick:focus { border-color: var(--ac); }
+/* Hide Safari's default "today" phantom value when no date is selected */
+.due-date-pick.empty::-webkit-datetime-edit { color: transparent; }
+.due-date-pick.empty::-webkit-datetime-edit-fields-wrapper { color: transparent; }
 
 /* Priority checkbox row */
 .prio-row {

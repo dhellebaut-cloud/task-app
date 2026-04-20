@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tasks</title>
-  <link rel="stylesheet" href="style.css?v=14" />
+  <link rel="stylesheet" href="style.css?v=15" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon.svg" />
   <meta name="theme-color" content="#1a1917" />
@@ -126,7 +126,7 @@
               <div class="due-row">
                 <button type="button" class="due-chip" id="due-today" onclick="selectDue('today')">Today</button>
                 <button type="button" class="due-chip" id="due-week" onclick="selectDue('week')">This week</button>
-                <input type="date" id="p-due" class="due-date-pick" oninput="onDueInputChange()" />
+                <input type="date" id="p-due" class="due-date-pick empty" oninput="onDueInputChange()" />
               </div>
             </div>
             <div class="pf">
@@ -259,7 +259,7 @@
         </div>
         <div class="pf">
           <div class="pfl">Deadline</div>
-          <input type="date" id="proj-popup-deadline" class="due-date-pick" />
+          <input type="date" id="proj-popup-deadline" class="due-date-pick empty" oninput="this.classList.toggle('empty',!this.value)" />
         </div>
         <div class="pf">
           <div class="pfl">Subtasks</div>

@@ -221,15 +221,18 @@ function selectDue(type) {
     if (type === 'today') input.value = getToday();
     else if (type === 'week') input.value = getEndOfWeek();
   }
+  input.classList.toggle('empty', !input.value);
   updateDueBtns();
 }
 
 function onDueInputChange() {
-  const val = document.getElementById('p-due').value;
-  if (!val)                  dueSel = '';
-  else if (val === getToday())      dueSel = 'today';
-  else if (val === getEndOfWeek())  dueSel = 'week';
-  else                       dueSel = 'date';
+  const input = document.getElementById('p-due');
+  const val = input.value;
+  input.classList.toggle('empty', !val);
+  if (!val)                       dueSel = '';
+  else if (val === getToday())    dueSel = 'today';
+  else if (val === getEndOfWeek()) dueSel = 'week';
+  else                            dueSel = 'date';
   updateDueBtns();
 }
 
@@ -751,7 +754,9 @@ function openPopup() {
   dueSel = '';
 
   ['p-title', 'p-from', 'p-notes'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('p-due').value   = '';
+  const pDue = document.getElementById('p-due');
+  pDue.value = '';
+  pDue.classList.add('empty');
   document.getElementById('p-group').value = '';
   document.getElementById('prio-chk').classList.remove('on');
   document.getElementById('prio-label').classList.remove('on');
@@ -831,7 +836,9 @@ function startEdit(id) {
     document.querySelector('#popup .btn-add').textContent = 'Save';
     document.getElementById('p-title').value  = t.title;
     document.getElementById('p-from').value   = t.from  || '';
-    document.getElementById('p-due').value    = t.due   || '';
+    const pDueEdit = document.getElementById('p-due');
+    pDueEdit.value = t.due || '';
+    pDueEdit.classList.toggle('empty', !t.due);
     document.getElementById('p-group').value  = t.group || '';
     renderGroupChips();
     document.getElementById('p-notes').value  = t.notes || '';
@@ -1329,7 +1336,9 @@ function openProjectPopup() {
   projPopupSubtasks = [];
   selProjectColor = 'teal';
   document.getElementById('proj-popup-name').value     = '';
-  document.getElementById('proj-popup-deadline').value = '';
+  const projDl = document.getElementById('proj-popup-deadline');
+  projDl.value = '';
+  projDl.classList.add('empty');
   renderProjectPopupSubtasks();
   renderColorPicker('proj-popup-colors', selProjectColor, id => {
     selProjectColor = id;
