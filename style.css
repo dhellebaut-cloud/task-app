@@ -1128,6 +1128,25 @@ button.sec-pill { cursor: pointer; }
   color: var(--t1);
   flex: 1;
 }
+.proj-name-input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--sans);
+  color: var(--t1);
+  padding: 0;
+  cursor: text;
+}
+.proj-name-input:focus {
+  background: var(--bg4);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin: -1px -5px;
+}
 .proj-complete-tag {
   font-size: 10px;
   font-weight: 600;
@@ -1234,32 +1253,26 @@ button.sec-pill { cursor: pointer; }
   justify-content: center;
   transition: background .12s, border-color .12s;
 }
-.proj-st-check.on {
-  background: #1d9e75;
-  border-color: #1d9e75;
-  color: #fff;
-}
-.proj-st-check:hover { border-color: #1d9e75; }
+/* .on background/border set via inline style (project color) */
+.proj-st-check.on { color: #fff; }
+.proj-st-check:hover { border-color: var(--proj-chk-hover, #1d9e75); }
 .proj-st-title {
   flex: 1;
   font-size: 11.5px;
   color: var(--t1);
 }
+.proj-st-due {
+  font-size: 10px;
+  color: var(--t2);
+  flex-shrink: 0;
+  margin-right: 2px;
+}
+.proj-st-due.ov { color: #f09595; }
+.proj-st-due.sn { color: #fac775; }
 .proj-st.done .proj-st-title {
   text-decoration: line-through;
   color: var(--t3);
 }
-.proj-st-edit-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 2px 3px;
-  display: flex;
-  align-items: center;
-  color: var(--ac3);
-  flex-shrink: 0;
-}
-.proj-st-edit-btn:hover { color: var(--t1); }
 .proj-st-del {
   opacity: 0;
   background: none;

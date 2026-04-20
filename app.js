@@ -945,10 +945,10 @@ function makeCard(t) {
 
 /* ── Update pill counts ── */
 function updateCounts() {
-  document.getElementById('cnt-open').textContent     = tasks.filter(t => !t.done).length;
-  document.getElementById('cnt-done').textContent     = tasks.filter(t => t.done).length;
+  document.getElementById('cnt-open').textContent     = tasks.filter(t => !t.done).length     + projects.filter(p => !p.archived).length;
+  document.getElementById('cnt-done').textContent     = tasks.filter(t => t.done).length      + projects.filter(p => p.archived).length;
   document.getElementById('cnt-priority').textContent = tasks.filter(t => t.priority && !t.done).length;
-  document.getElementById('cnt-all').textContent      = tasks.length;
+  document.getElementById('cnt-all').textContent      = tasks.length + projects.length;
 }
 
 /* ── Drag and drop ── */
@@ -1096,7 +1096,7 @@ function renderProjectCard(p) {
   const barColor   = isComplete ? '#1d9e75' : p.color;
   const dl         = p.deadline ? dueTxt(p.deadline) : null;
 
-  const subtasksHtml = p.collapsed ? '' : p.subtasks.map(s => renderSubtaskRow(p.id, s)).join('');
+  const subtasksHtml = p.collapsed ? '' : p.subtasks.map(s => renderSubtaskRow(p.id, s, p.color)).join('');
 
   const addHtml = !p.collapsed ? (
     addingSubtaskProjectId === p.id
@@ -1123,7 +1123,10 @@ function renderProjectCard(p) {
     <div class="proj-hdr" onclick="toggleProject('${p.id}')">
       <svg class="proj-arrow${p.collapsed ? '' : ' open'}" width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,2.5 4,5.5 6.5,2.5"/></svg>
       <span class="proj-dot" style="background:${p.color}"></span>
-      <span class="proj-name">${esc(p.title)}</span>
+      <input class="proj-name-input" value="${esc(p.title)}"
+             onclick="event.stopPropagation()"
+             onblur="updateProjectField('${p.id}','title',this.value.trim()||'${esc(p.title)}')"
+             onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){this.value='${esc(p.title)}';this.blur()}" />
       ${isComplete ? '<span class="proj-complete-tag">Completed</span>' : ''}
       ${dl ? `<span class="proj-dl-chip${dl.cls ? ' ' + dl.cls : ''}">${dl.label}</span>` : ''}
       <span class="proj-count">${done}/${total}</span>
@@ -1138,8 +1141,10 @@ function renderProjectCard(p) {
   </div>`;
 }
 
-function renderSubtaskRow(projectId, s) {
-  const editing = expandedSubtaskIds.has(s.id);
+function renderSubtaskRow(projectId, s, projColor) {
+  const editing  = expandedSubtaskIds.has(s.id);
+  const stDue    = s.due ? dueTxt(s.due) : null;
+  const dueHtml  = stDue ? `<span class="proj-st-due${stDue.cls ? ' ' + stDue.cls : ''}">${stDue.label}</span>` : '';
   const extra = editing ? `
     <div class="proj-st-extra">
       <div class="prio-row">
@@ -1168,16 +1173,16 @@ function renderSubtaskRow(projectId, s) {
       </div>
     </div>` : '';
 
+  const chkStyle = projColor ? ` style="${s.done ? `background:${projColor};border-color:${projColor}` : `--proj-chk-hover:${projColor}`}"` : '';
+
   return `<div class="proj-st${s.done ? ' done' : ''}${editing ? ' editing' : ''}">
     <div class="proj-st-row" onclick="toggleSubtaskExpand('${s.id}')">
-      <div class="proj-st-check${s.done ? ' on' : ''}" onclick="event.stopPropagation();toggleSubtaskDone('${projectId}','${s.id}')">
+      <div class="proj-st-check${s.done ? ' on' : ''}"${chkStyle} onclick="event.stopPropagation();toggleSubtaskDone('${projectId}','${s.id}')">
         ${s.done ? `<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg>` : ''}
       </div>
       ${s.priority ? '<span class="proj-st-prio-flag">!</span>' : ''}
       <span class="proj-st-title">${esc(s.title)}</span>
-      ${editing ? `<button class="proj-st-edit-btn" onclick="event.stopPropagation();toggleSubtaskExpand('${s.id}')" title="Close edit">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      </button>` : ''}
+      ${dueHtml}
       <button class="proj-st-del" onclick="event.stopPropagation();deleteSubtask('${projectId}','${s.id}')">×</button>
     </div>
     ${extra}
