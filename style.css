@@ -297,7 +297,9 @@ body {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+  scrollbar-width: none;
 }
+#scroll-area::-webkit-scrollbar { display: none; }
 #tlist {
   padding: 10px;
 }
