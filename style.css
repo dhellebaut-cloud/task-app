@@ -1294,6 +1294,7 @@ button.sec-pill { cursor: pointer; }
 /* .on background/border set via inline style (project color) */
 .proj-st-check.on { color: #fff; }
 .proj-st-check:hover { border-color: var(--proj-chk-hover, #1d9e75); }
+.proj-st-spacer { flex: 1; }
 .proj-st-title {
   flex: 0 1 auto;
   font-size: 11.5px;

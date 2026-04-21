@@ -1210,6 +1210,7 @@ function renderSubtaskRow(projectId, s, projColor) {
              oninput="this.size=Math.max(this.value.length,6)"
              onblur="updateSubtaskField('${projectId}','${s.id}','title',this.value.trim()||'${esc(s.title)}',true)"
              onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){this.value='${esc(s.title)}';this.size=${Math.max(s.title.length,6)};this.blur()}" />
+      <span class="proj-st-spacer"></span>
       ${dueHtml}
       ${s.link ? `<button class="proj-st-copy-btn" id="copy-btn-${s.id}" onclick="event.stopPropagation();copySubtaskLink('${s.id}','${esc(s.link)}')">Copy link</button>` : ''}
       <button class="proj-st-del" onclick="event.stopPropagation();deleteSubtask('${projectId}','${s.id}')">×</button>
