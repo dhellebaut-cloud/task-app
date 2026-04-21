@@ -1335,6 +1335,9 @@ function toggleTaskWW(id) {
   if (!t.workWeek) t.estimate = null;
   persist();
   renderList();
+  // re-expand the detail that renderList() collapsed
+  document.getElementById('det-' + id)?.classList.add('op');
+  document.getElementById('arr-' + id)?.classList.add('op');
 }
 
 function updateTaskEstimate(id, field, val) {
@@ -1374,7 +1377,7 @@ function renderWorkWeekBar() {
   const wwSubtasks = projects.flatMap(p => p.subtasks.filter(s => s.workWeek && s.estimate));
   const totalMin   = [...wwTasks, ...wwSubtasks].reduce((a, x) => a + toMin(x.estimate), 0);
   if (totalMin === 0) { wrap.innerHTML = ''; wrap.style.display = 'none'; return; }
-  wrap.style.display = '';
+  wrap.style.display = 'flex';
   const budget      = 38 * 60;
   const pct         = totalMin / budget * 100;
   const color       = pct >= 90 ? '#d85a30' : pct >= 70 ? '#ef9f27' : '#1d9e75';
