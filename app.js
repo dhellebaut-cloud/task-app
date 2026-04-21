@@ -146,6 +146,8 @@ let selProjectColor        = 'teal';
 let projPopupSubtasks      = [];
 let addingSubtaskProjectId  = null;
 let inlineSubtaskPriority   = false;
+let inlineSubtaskWW         = false;
+let wwChecked               = false;
 let expandedSubtaskIds      = new Set();
 let activeSettingsSection  = 'general';
 let prioChecked  = false;    // state of priority checkbox in popup
@@ -753,6 +755,12 @@ function openPopup() {
   prioChecked = false;
   dueSel = '';
 
+  wwChecked = false;
+  document.getElementById('ww-chk').classList.remove('on');
+  document.getElementById('ww-label').classList.remove('on');
+  document.getElementById('ww-est-row').style.display = 'none';
+  document.getElementById('p-est-h').value = '';
+  document.getElementById('p-est-m').value = '';
   ['p-title', 'p-from', 'p-notes'].forEach(id => document.getElementById(id).value = '');
   const pDue = document.getElementById('p-due');
   pDue.value = '';
@@ -801,6 +809,8 @@ function submitTask() {
     notes:    document.getElementById('p-notes').value.trim(),
     done:     false,
     created:  new Date().toISOString(),
+    workWeek: wwChecked,
+    estimate: wwChecked ? { h: parseInt(document.getElementById('p-est-h').value) || 0, m: parseInt(document.getElementById('p-est-m').value) || 0 } : null,
   };
 
   if (editId) {
@@ -845,6 +855,12 @@ function startEdit(id) {
 
     document.getElementById('prio-chk').classList.toggle('on', prioChecked);
     document.getElementById('prio-label').classList.toggle('on', prioChecked);
+    wwChecked = t.workWeek || false;
+    document.getElementById('ww-chk').classList.toggle('on', wwChecked);
+    document.getElementById('ww-label').classList.toggle('on', wwChecked);
+    document.getElementById('ww-est-row').style.display = wwChecked ? '' : 'none';
+    document.getElementById('p-est-h').value = t.estimate?.h ?? '';
+    document.getElementById('p-est-m').value = t.estimate?.m ?? '';
 
     const due = t.due || '';
     if (!due)                    dueSel = '';
@@ -927,6 +943,18 @@ function makeCard(t) {
           ${g          ? `<span class="dl">Group</span><span class="dv"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${g.color};margin-right:4px;vertical-align:middle"></span>${esc(g.name)}</span>` : ''}
         </div>
         ${t.notes ? `<div class="dnotes">${linkify(esc(t.notes))}</div>` : ''}
+        <div class="det-ww-row">
+          <div class="prio-chk-box${t.workWeek ? ' on' : ''}" onclick="event.stopPropagation();toggleTaskWW(${t.id})"><div class="tick"></div></div>
+          <span class="prio-label${t.workWeek ? ' on' : ''}" onclick="event.stopPropagation();toggleTaskWW(${t.id})">Work week</span>
+          ${t.workWeek ? `<div class="est-row" onclick="event.stopPropagation()">
+            <input type="number" class="est-input" value="${t.estimate?.h || 0}" min="0" max="99"
+                   onchange="updateTaskEstimate(${t.id},'h',this.value)" />
+            <span class="est-unit">h</span>
+            <input type="number" class="est-input" value="${t.estimate?.m || 0}" min="0" max="59"
+                   onchange="updateTaskEstimate(${t.id},'m',this.value)" />
+            <span class="est-unit">m</span>
+          </div>` : ''}
+        </div>
         <div class="dacts">
           <button class="dact" onclick="startEdit(${t.id})">Edit</button>
           <button class="dact del" onclick="delTask(${t.id})">Delete</button>
@@ -1029,6 +1057,7 @@ function renderList() {
   } else {
     visible.forEach(t => el.appendChild(makeCard(t)));
   }
+  renderWorkWeekBar();
 }
 
 /* ── Append a group section header ── */
@@ -1094,6 +1123,7 @@ function renderProjects() {
     const inp = document.getElementById('proj-st-input-' + addingSubtaskProjectId);
     if (inp) inp.focus();
   }
+  renderWorkWeekBar();
 }
 
 function renderProjectCard(p) {
@@ -1112,6 +1142,13 @@ function renderProjectCard(p) {
            <div class="proj-st-add-prio${inlineSubtaskPriority ? ' on' : ''}" onclick="toggleInlineSubtaskPriority()" title="Mark as priority">!</div>
            <input class="proj-st-add-input" id="proj-st-input-${p.id}" type="text" placeholder="New subtask..."
                   onkeydown="if(event.key==='Enter')submitInlineSubtask('${p.id}');if(event.key==='Escape')closeInlineSubtask()" />
+           <div class="proj-st-add-ww${inlineSubtaskWW ? ' on' : ''}" onclick="toggleInlineSubtaskWW()" title="Add to work week">W</div>
+         </div>
+         <div class="proj-st-add-est${inlineSubtaskWW ? '' : ' hidden'}">
+           <input type="number" class="est-input" id="proj-st-est-h-${p.id}" min="0" max="99" placeholder="0" />
+           <span class="est-unit">h</span>
+           <input type="number" class="est-input" id="proj-st-est-m-${p.id}" min="0" max="59" placeholder="0" />
+           <span class="est-unit">m</span>
          </div>`
       : `<button class="proj-add-st-btn" onclick="openInlineSubtask('${p.id}')">
            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1195,6 +1232,21 @@ function renderSubtaskRow(projectId, s, projColor) {
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></a>` : ''}
         </div>
       </div>
+      <div class="prio-row" style="margin-top:4px">
+        <div class="prio-chk-box${s.workWeek ? ' on' : ''}" onclick="toggleSubtaskWW('${projectId}','${s.id}')"><div class="tick"></div></div>
+        <span class="prio-label${s.workWeek ? ' on' : ''}" onclick="toggleSubtaskWW('${projectId}','${s.id}')">Add to work week</span>
+      </div>
+      ${s.workWeek ? `<div class="pf">
+        <div class="pfl">Estimate</div>
+        <div class="est-row">
+          <input type="number" class="est-input" value="${s.estimate?.h || 0}" min="0" max="99"
+                 onchange="updateSubtaskEstimate('${projectId}','${s.id}','h',this.value)" />
+          <span class="est-unit">h</span>
+          <input type="number" class="est-input" value="${s.estimate?.m || 0}" min="0" max="59"
+                 onchange="updateSubtaskEstimate('${projectId}','${s.id}','m',this.value)" />
+          <span class="est-unit">m</span>
+        </div>
+      </div>` : ''}
     </div>` : '';
 
   const chkStyle = projColor ? ` style="${s.done ? `background:${projColor};border-color:${projColor}` : `--proj-chk-hover:${projColor}`}"` : '';
@@ -1268,6 +1320,84 @@ function updateProjectField(projectId, field, value) {
   renderProjects();
 }
 
+/* ── Work week ── */
+function toggleWWChk() {
+  wwChecked = !wwChecked;
+  document.getElementById('ww-chk').classList.toggle('on', wwChecked);
+  document.getElementById('ww-label').classList.toggle('on', wwChecked);
+  document.getElementById('ww-est-row').style.display = wwChecked ? '' : 'none';
+}
+
+function toggleTaskWW(id) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  t.workWeek = !t.workWeek;
+  if (!t.workWeek) t.estimate = null;
+  persist();
+  renderList();
+}
+
+function updateTaskEstimate(id, field, val) {
+  const t = tasks.find(x => x.id === id);
+  if (!t) return;
+  if (!t.estimate) t.estimate = { h: 0, m: 0 };
+  t.estimate[field] = Math.max(0, parseInt(val) || 0);
+  persist();
+  renderWorkWeekBar();
+}
+
+function toggleSubtaskWW(projectId, subtaskId) {
+  const p = projects.find(x => x.id === projectId);
+  const s = p?.subtasks.find(x => x.id === subtaskId);
+  if (!s) return;
+  s.workWeek = !s.workWeek;
+  if (!s.workWeek) s.estimate = null;
+  persist();
+  renderProjects();
+}
+
+function updateSubtaskEstimate(projectId, subtaskId, field, val) {
+  const p = projects.find(x => x.id === projectId);
+  const s = p?.subtasks.find(x => x.id === subtaskId);
+  if (!s) return;
+  if (!s.estimate) s.estimate = { h: 0, m: 0 };
+  s.estimate[field] = Math.max(0, parseInt(val) || 0);
+  persist();
+  renderWorkWeekBar();
+}
+
+function renderWorkWeekBar() {
+  const wrap = document.getElementById('ww-wrap');
+  if (!wrap) return;
+  const toMin = e => (+(e?.h || 0)) * 60 + (+(e?.m || 0));
+  const wwTasks    = tasks.filter(t => t.workWeek && t.estimate);
+  const wwSubtasks = projects.flatMap(p => p.subtasks.filter(s => s.workWeek && s.estimate));
+  const doneMin    = [...wwTasks.filter(t => t.done), ...wwSubtasks.filter(s => s.done)]
+                       .reduce((a, x) => a + toMin(x.estimate), 0);
+  const ongoingMin = [...wwTasks.filter(t => !t.done), ...wwSubtasks.filter(s => !s.done)]
+                       .reduce((a, x) => a + toMin(x.estimate), 0);
+  const totalMin   = doneMin + ongoingMin;
+  if (totalMin === 0) { wrap.innerHTML = ''; return; }
+  const budget      = 38 * 60;
+  const overflow    = Math.max(0, totalMin - budget);
+  const greenPct    = Math.min(doneMin, budget) / budget * 100;
+  const orangePct   = (Math.min(totalMin, budget) - Math.min(doneMin, budget)) / budget * 100;
+  const overflowPct = overflow / budget * 100;
+  const totalH = Math.floor(totalMin / 60);
+  const totalM = totalMin % 60;
+  const label  = totalM ? `${totalH}h ${totalM}m` : `${totalH}h`;
+  wrap.innerHTML = `
+    <div class="ww-track">
+      <div class="ww-main-bar">
+        <div class="ww-seg ww-done"    style="width:${greenPct}%"></div>
+        <div class="ww-seg ww-ongoing" style="width:${orangePct}%"></div>
+      </div>${overflow ? `
+      <div class="ww-marker"></div>
+      <div class="ww-overflow" style="width:${overflowPct}%"></div>` : ''}
+    </div>
+    <span class="ww-label">${label}</span>`;
+}
+
 let _dotPickerProjectId = null;
 let _dotPickerOutside  = null;
 
@@ -1301,13 +1431,21 @@ function toggleProjectColorPicker(projectId, dotEl) {
 function openInlineSubtask(projectId) {
   addingSubtaskProjectId = projectId;
   inlineSubtaskPriority  = false;
+  inlineSubtaskWW        = false;
   renderProjects();
 }
 
 function closeInlineSubtask() {
   addingSubtaskProjectId = null;
   inlineSubtaskPriority  = false;
+  inlineSubtaskWW        = false;
   renderProjects();
+}
+
+function toggleInlineSubtaskWW() {
+  inlineSubtaskWW = !inlineSubtaskWW;
+  document.querySelector('.proj-st-add-ww')?.classList.toggle('on', inlineSubtaskWW);
+  document.querySelectorAll('.proj-st-add-est').forEach(el => el.classList.toggle('hidden', !inlineSubtaskWW));
 }
 
 function toggleInlineSubtaskPriority() {
@@ -1324,8 +1462,11 @@ function submitInlineSubtask(projectId) {
   if (!title) { closeInlineSubtask(); return; }
   const p = projects.find(x => x.id === projectId);
   if (!p) return;
-  p.subtasks.push({ id: 'st' + Date.now() + Math.random().toString(36).slice(2,6), title, done: false, priority: inlineSubtaskPriority, from: '', due: '', link: '', notes: '', created: new Date().toISOString() });
+  const estH = parseInt(document.getElementById('proj-st-est-h-' + projectId)?.value) || 0;
+  const estM = parseInt(document.getElementById('proj-st-est-m-' + projectId)?.value) || 0;
+  p.subtasks.push({ id: 'st' + Date.now() + Math.random().toString(36).slice(2,6), title, done: false, priority: inlineSubtaskPriority, workWeek: inlineSubtaskWW, estimate: inlineSubtaskWW ? { h: estH, m: estM } : null, from: '', due: '', link: '', notes: '', created: new Date().toISOString() });
   inlineSubtaskPriority = false;
+  inlineSubtaskWW = false;
   persist();
   renderProjects(); // keeps add row open for rapid entry
 }

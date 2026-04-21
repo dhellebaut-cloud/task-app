@@ -1702,6 +1702,110 @@ button.sec-pill { cursor: pointer; }
 .sp-item-rm:hover { color: #f09595; }
 .sp-empty { font-size: 11px; color: var(--t3); padding: 8px 0 14px; }
 
+/* ── Work-week progress bar ── */
+#ww-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 16px 5px;
+  background: var(--bg2);
+  border-bottom: 0.5px solid var(--b);
+}
+.ww-track {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.ww-main-bar {
+  flex: 1;
+  height: 5px;
+  background: var(--bg4);
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+}
+.ww-seg { height: 100%; }
+.ww-done    { background: #1d9e75; }
+.ww-ongoing { background: #ef9f27; }
+.ww-marker {
+  width: 2px;
+  height: 9px;
+  background: var(--t3);
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+.ww-overflow {
+  height: 5px;
+  background: #d85a30;
+  border-radius: 0 3px 3px 0;
+  flex-shrink: 0;
+  min-width: 3px;
+}
+.ww-label {
+  font-size: 10px;
+  color: var(--t2);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Estimate inputs ── */
+.est-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.est-input {
+  width: 38px;
+  background: var(--bg4);
+  border: .5px solid var(--b2);
+  border-radius: 4px;
+  color: var(--t);
+  font-size: 11px;
+  padding: 3px 5px;
+  text-align: center;
+  -moz-appearance: textfield;
+  font-family: inherit;
+}
+.est-input::-webkit-outer-spin-button,
+.est-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.est-input:focus { outline: none; border-color: var(--b3); background: var(--bg3); }
+.est-unit { font-size: 11px; color: var(--t3); }
+
+/* ── Inline subtask add: work-week toggle ── */
+.proj-st-add-ww {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: .5px solid var(--b2);
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--t3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  user-select: none;
+}
+.proj-st-add-ww.on { background: rgba(29,158,117,.15); border-color: #1d9e75; color: #1d9e75; }
+.proj-st-add-est {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 30px;
+}
+.proj-st-add-est.hidden { display: none; }
+
+/* ── Task card detail: work-week row ── */
+.det-ww-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 2px;
+  flex-wrap: wrap;
+}
+
 /* Add form at bottom of section */
 .sp-add-form {
   border-top: .5px solid var(--b);

@@ -48,6 +48,9 @@
       <!-- Group filter tab bar — full width -->
       <div class="gbar" id="gbar"></div>
 
+      <!-- Work-week progress bar -->
+      <div id="ww-wrap"></div>
+
       <!-- Constrained content area -->
       <div class="content-wrap">
 
@@ -102,6 +105,23 @@
               <div class="tick"></div>
             </div>
             <span class="prio-label" id="prio-label" onclick="togglePrioChk()">Mark as priority</span>
+          </div>
+
+          <!-- Work week toggle -->
+          <div class="prio-row">
+            <div class="prio-chk-box" id="ww-chk" onclick="toggleWWChk()">
+              <div class="tick"></div>
+            </div>
+            <span class="prio-label" id="ww-label" onclick="toggleWWChk()">Add to work week</span>
+          </div>
+          <div class="pf" id="ww-est-row" style="display:none">
+            <div class="pfl">Estimate</div>
+            <div class="est-row">
+              <input type="number" id="p-est-h" min="0" max="99" placeholder="0" class="est-input" />
+              <span class="est-unit">h</span>
+              <input type="number" id="p-est-m" min="0" max="59" placeholder="0" class="est-input" />
+              <span class="est-unit">m</span>
+            </div>
           </div>
 
           <!-- Detail fields -->
