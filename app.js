@@ -1134,7 +1134,10 @@ function renderProjectCard(p) {
   return `<div class="proj-card" id="proj-${p.id}">
     <div class="proj-hdr" onclick="toggleProject('${p.id}')">
       <svg class="proj-arrow${p.collapsed ? '' : ' open'}" width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,2.5 4,5.5 6.5,2.5"/></svg>
-      <span class="proj-dot" style="background:${p.color}"></span>
+      <span class="proj-dot-wrap">
+        <span class="proj-dot" style="background:${p.color}" title="Change colour" onclick="event.stopPropagation();toggleProjectColorPicker('${p.id}')"></span>
+        <div class="proj-dot-picker" id="proj-dot-picker-${p.id}"></div>
+      </span>
       <input class="proj-name-input" value="${esc(p.title)}" size="${Math.max(p.title.length, 3)}"
              onclick="event.stopPropagation()"
              oninput="this.size=Math.max(this.value.length,3)"
@@ -1205,7 +1208,11 @@ function renderSubtaskRow(projectId, s, projColor) {
         ${s.done ? `<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg>` : ''}
       </div>
       ${s.priority ? '<span class="proj-st-prio-flag">!</span>' : ''}
-      <span class="proj-st-title">${esc(s.title)}</span>
+      <input class="proj-st-title" value="${esc(s.title)}" size="${Math.max(s.title.length, 6)}"
+             onclick="event.stopPropagation()"
+             oninput="this.size=Math.max(this.value.length,6)"
+             onblur="updateSubtaskField('${projectId}','${s.id}','title',this.value.trim()||'${esc(s.title)}',true)"
+             onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){this.value='${esc(s.title)}';this.size=${Math.max(s.title.length,6)};this.blur()}" />
       ${dueHtml}
       ${s.link ? `<button class="proj-st-copy-btn" id="copy-btn-${s.id}" onclick="event.stopPropagation();copySubtaskLink('${s.id}','${esc(s.link)}')">Copy link</button>` : ''}
       <button class="proj-st-del" onclick="event.stopPropagation();deleteSubtask('${projectId}','${s.id}')">×</button>
@@ -1261,6 +1268,30 @@ function updateProjectField(projectId, field, value) {
   p[field] = value;
   persist();
   renderProjects();
+}
+
+let _dotPickerOutside = null;
+function toggleProjectColorPicker(projectId) {
+  const el = document.getElementById('proj-dot-picker-' + projectId);
+  const isOpen = el.classList.contains('vis');
+  if (_dotPickerOutside) { document.removeEventListener('click', _dotPickerOutside); _dotPickerOutside = null; }
+  document.querySelectorAll('.proj-dot-picker.vis').forEach(x => x.classList.remove('vis'));
+  if (!isOpen) {
+    const p = projects.find(x => x.id === projectId);
+    const curId = COLS.find(c => c.h === p.color)?.id || 'purple';
+    el.classList.add('vis');
+    renderColorPicker('proj-dot-picker-' + projectId, curId, id => {
+      updateProjectField(projectId, 'color', gc(id));
+    });
+    _dotPickerOutside = e => {
+      if (!el.contains(e.target)) {
+        el.classList.remove('vis');
+        document.removeEventListener('click', _dotPickerOutside);
+        _dotPickerOutside = null;
+      }
+    };
+    setTimeout(() => document.addEventListener('click', _dotPickerOutside), 0);
+  }
 }
 
 function openInlineSubtask(projectId) {
