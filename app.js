@@ -1134,10 +1134,7 @@ function renderProjectCard(p) {
   return `<div class="proj-card" id="proj-${p.id}">
     <div class="proj-hdr" onclick="toggleProject('${p.id}')">
       <svg class="proj-arrow${p.collapsed ? '' : ' open'}" width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,2.5 4,5.5 6.5,2.5"/></svg>
-      <span class="proj-dot-wrap">
-        <span class="proj-dot" style="background:${p.color}" title="Change colour" onclick="event.stopPropagation();toggleProjectColorPicker('${p.id}')"></span>
-        <div class="proj-dot-picker" id="proj-dot-picker-${p.id}"></div>
-      </span>
+      <span class="proj-dot" style="background:${p.color}" title="Change colour" onclick="event.stopPropagation();toggleProjectColorPicker('${p.id}',this)"></span>
       <input class="proj-name-input" value="${esc(p.title)}" size="${Math.max(p.title.length, 3)}"
              onclick="event.stopPropagation()"
              oninput="this.size=Math.max(this.value.length,3)"
@@ -1270,28 +1267,34 @@ function updateProjectField(projectId, field, value) {
   renderProjects();
 }
 
-let _dotPickerOutside = null;
-function toggleProjectColorPicker(projectId) {
-  const el = document.getElementById('proj-dot-picker-' + projectId);
-  const isOpen = el.classList.contains('vis');
+let _dotPickerProjectId = null;
+let _dotPickerOutside  = null;
+
+function closeDotPicker() {
+  document.getElementById('proj-dot-picker')?.remove();
   if (_dotPickerOutside) { document.removeEventListener('click', _dotPickerOutside); _dotPickerOutside = null; }
-  document.querySelectorAll('.proj-dot-picker.vis').forEach(x => x.classList.remove('vis'));
-  if (!isOpen) {
-    const p = projects.find(x => x.id === projectId);
-    const curId = COLS.find(c => c.h === p.color)?.id || 'purple';
-    el.classList.add('vis');
-    renderColorPicker('proj-dot-picker-' + projectId, curId, id => {
-      updateProjectField(projectId, 'color', gc(id));
-    });
-    _dotPickerOutside = e => {
-      if (!el.contains(e.target)) {
-        el.classList.remove('vis');
-        document.removeEventListener('click', _dotPickerOutside);
-        _dotPickerOutside = null;
-      }
-    };
-    setTimeout(() => document.addEventListener('click', _dotPickerOutside), 0);
-  }
+  _dotPickerProjectId = null;
+}
+
+function toggleProjectColorPicker(projectId, dotEl) {
+  if (_dotPickerProjectId === projectId) { closeDotPicker(); return; }
+  closeDotPicker();
+  const p = projects.find(x => x.id === projectId);
+  const curId = COLS.find(c => c.h === p.color)?.id || 'purple';
+  const panel = document.createElement('div');
+  panel.id = 'proj-dot-picker';
+  panel.className = 'proj-dot-picker';
+  document.body.appendChild(panel);
+  const rect = dotEl.getBoundingClientRect();
+  panel.style.top  = (rect.bottom + 4) + 'px';
+  panel.style.left = (rect.left - 4)   + 'px';
+  renderColorPicker('proj-dot-picker', curId, id => {
+    closeDotPicker();
+    updateProjectField(projectId, 'color', gc(id));
+  });
+  _dotPickerProjectId = projectId;
+  _dotPickerOutside = e => { if (!panel.contains(e.target)) closeDotPicker(); };
+  setTimeout(() => document.addEventListener('click', _dotPickerOutside), 0);
 }
 
 function openInlineSubtask(projectId) {

@@ -1119,12 +1119,6 @@ button.sec-pill { cursor: pointer; }
   transition: transform .15s;
 }
 .proj-arrow.open { transform: rotate(0deg); }
-.proj-dot-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
 .proj-dot {
   width: 8px;
   height: 8px;
@@ -1133,20 +1127,17 @@ button.sec-pill { cursor: pointer; }
   cursor: pointer;
 }
 .proj-dot-picker {
-  display: none;
-  position: absolute;
-  top: 14px;
-  left: -4px;
+  display: flex;
+  position: fixed;
   background: var(--bg2);
   border: .5px solid var(--b2);
   border-radius: 8px;
   padding: 6px;
   gap: 5px;
-  z-index: 200;
+  z-index: 1000;
   flex-wrap: wrap;
-  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,.25);
 }
-.proj-dot-picker.vis { display: flex; }
 .proj-name {
   font-size: 12px;
   font-weight: 600;
