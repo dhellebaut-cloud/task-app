@@ -1372,16 +1372,14 @@ function renderWorkWeekBar() {
   const toMin = e => (+(e?.h || 0)) * 60 + (+(e?.m || 0));
   const wwTasks    = tasks.filter(t => t.workWeek && t.estimate);
   const wwSubtasks = projects.flatMap(p => p.subtasks.filter(s => s.workWeek && s.estimate));
-  const doneMin    = [...wwTasks.filter(t => t.done), ...wwSubtasks.filter(s => s.done)]
-                       .reduce((a, x) => a + toMin(x.estimate), 0);
-  const ongoingMin = [...wwTasks.filter(t => !t.done), ...wwSubtasks.filter(s => !s.done)]
-                       .reduce((a, x) => a + toMin(x.estimate), 0);
-  const totalMin   = doneMin + ongoingMin;
-  if (totalMin === 0) { wrap.innerHTML = ''; return; }
+  const totalMin   = [...wwTasks, ...wwSubtasks].reduce((a, x) => a + toMin(x.estimate), 0);
+  if (totalMin === 0) { wrap.innerHTML = ''; wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
   const budget      = 38 * 60;
+  const pct         = totalMin / budget * 100;
+  const color       = pct >= 90 ? '#d85a30' : pct >= 70 ? '#ef9f27' : '#1d9e75';
+  const fillPct     = Math.min(pct, 100);
   const overflow    = Math.max(0, totalMin - budget);
-  const greenPct    = Math.min(doneMin, budget) / budget * 100;
-  const orangePct   = (Math.min(totalMin, budget) - Math.min(doneMin, budget)) / budget * 100;
   const overflowPct = overflow / budget * 100;
   const totalH = Math.floor(totalMin / 60);
   const totalM = totalMin % 60;
@@ -1389,11 +1387,10 @@ function renderWorkWeekBar() {
   wrap.innerHTML = `
     <div class="ww-track">
       <div class="ww-main-bar">
-        <div class="ww-seg ww-done"    style="width:${greenPct}%"></div>
-        <div class="ww-seg ww-ongoing" style="width:${orangePct}%"></div>
+        <div class="ww-fill" style="width:${fillPct}%;background:${color}"></div>
       </div>${overflow ? `
       <div class="ww-marker"></div>
-      <div class="ww-overflow" style="width:${overflowPct}%"></div>` : ''}
+      <div class="ww-overflow" style="width:${overflowPct}%;background:${color}"></div>` : ''}
     </div>
     <span class="ww-label">${label}</span>`;
 }
