@@ -293,9 +293,12 @@ body {
 .gdot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 
 /* ── Task list ── */
-#tlist {
+#scroll-area {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
+}
+#tlist {
   padding: 10px;
 }
 
