@@ -970,8 +970,15 @@ button.sec-pill { cursor: pointer; }
 }
 .due-date-pick:focus { border-color: var(--ac); }
 /* Hide Safari's default "today" phantom value when no date is selected */
+.due-date-pick.empty { color: transparent; }
 .due-date-pick.empty::-webkit-datetime-edit { color: transparent; }
 .due-date-pick.empty::-webkit-datetime-edit-fields-wrapper { color: transparent; }
+.proj-deadline-input.empty { color: transparent; }
+.proj-deadline-input.empty::-webkit-datetime-edit { color: transparent; }
+.proj-deadline-input.empty::-webkit-datetime-edit-fields-wrapper { color: transparent; }
+.sp-date-input.empty { color: transparent; }
+.sp-date-input.empty::-webkit-datetime-edit { color: transparent; }
+.sp-date-input.empty::-webkit-datetime-edit-fields-wrapper { color: transparent; }
 
 /* Priority checkbox row */
 .prio-row {
