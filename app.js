@@ -137,6 +137,7 @@ let nextId       = 1;
 let selSettingsGroupColor  = 'purple';
 let selSettingsPeopleColor = 'purple';
 let profile                = { name: '', emoji: '', slackWebhook: '', slackTeamId: '' };
+let autoBackup             = { enabled: false, pat: '', gistId: '', lastBackupTime: '' };
 let people                 = [];
 let links                  = [];
 let linksExpanded          = false;
@@ -166,6 +167,10 @@ function persist() {
   } catch (_) { /* storage unavailable */ }
 }
 
+function persistAutoBackup() {
+  try { localStorage.setItem('tasks-app:autobackup', JSON.stringify(autoBackup)); } catch (_) {}
+}
+
 function loadFromStorage() {
   try {
     const t = localStorage.getItem('tasks-app:tasks');
@@ -182,6 +187,8 @@ function loadFromStorage() {
     const pj = localStorage.getItem('tasks-app:projects');
     if (pj) projects = JSON.parse(pj);
     if (n)  nextId   = parseInt(n, 10) || 1;
+    const ab = localStorage.getItem('tasks-app:autobackup');
+    if (ab) autoBackup = { ...autoBackup, ...JSON.parse(ab) };
   } catch (_) { /* ignore corrupt data */ }
 }
 
@@ -479,6 +486,9 @@ function openSettings(section) {
   document.getElementById('sps-emoji').value               = profile.emoji      || '';
   document.getElementById('sps-emoji-display').textContent = profile.emoji      || '😀';
   document.getElementById('sps-slack-team').value          = profile.slackTeamId || '';
+  document.getElementById('ab-toggle').classList.toggle('on', autoBackup.enabled);
+  document.getElementById('ab-pat').value = autoBackup.pat || '';
+  updateBackupStatus();
 }
 
 function closeSettings() {
@@ -584,6 +594,79 @@ function importData() {
     reader.readAsText(file);
   };
   input.click();
+}
+
+/* ── Auto backup (GitHub Gist) ── */
+function toggleAutoBackup() {
+  autoBackup.enabled = !autoBackup.enabled;
+  document.getElementById('ab-toggle').classList.toggle('on', autoBackup.enabled);
+  persistAutoBackup();
+}
+
+function saveAutoBackupPat() {
+  autoBackup.pat = document.getElementById('ab-pat').value;
+  persistAutoBackup();
+}
+
+function updateBackupStatus(msg) {
+  const el = document.getElementById('ab-status');
+  if (!el) return;
+  if (msg) { el.textContent = msg; return; }
+  if (autoBackup.lastBackupTime) {
+    const d = new Date(autoBackup.lastBackupTime);
+    el.textContent = 'Last backup: ' + d.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  } else {
+    el.textContent = 'Not yet backed up';
+  }
+}
+
+async function runGistBackup(silent = false) {
+  if (!autoBackup.pat) {
+    if (!silent) updateBackupStatus('No PAT configured');
+    return;
+  }
+  const payload = JSON.stringify({ tasks, groups, people, profile, links, projects, nextId }, null, 2);
+  const reqBody = JSON.stringify({
+    description: 'Tasks app backup',
+    public: false,
+    files: { 'tasks-backup.json': { content: payload } }
+  });
+  const headers = {
+    'Authorization': 'token ' + autoBackup.pat,
+    'Content-Type': 'application/json',
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+  try {
+    const url = autoBackup.gistId
+      ? 'https://api.github.com/gists/' + autoBackup.gistId
+      : 'https://api.github.com/gists';
+    const method = autoBackup.gistId ? 'PATCH' : 'POST';
+    const res = await fetch(url, { method, headers, body: reqBody });
+    if (res.ok) {
+      const data = await res.json();
+      autoBackup.gistId = data.id;
+      autoBackup.lastBackupTime = new Date().toISOString();
+      persistAutoBackup();
+      if (!silent) updateBackupStatus();
+    } else {
+      if (!silent) updateBackupStatus('Backup failed (' + res.status + ')');
+    }
+  } catch (e) {
+    if (!silent) updateBackupStatus('Network error');
+  }
+}
+
+function startBackupScheduler() {
+  setInterval(() => {
+    if (!autoBackup.enabled || !autoBackup.pat) return;
+    const h = new Date().getHours();
+    if (h < 9 || h >= 18) return;
+    if (autoBackup.lastBackupTime) {
+      if (Date.now() - new Date(autoBackup.lastBackupTime).getTime() < 60 * 60 * 1000) return;
+    }
+    runGistBackup(true);
+  }, 60 * 1000);
 }
 
 function renderProfileBar() {
@@ -1789,6 +1872,7 @@ function init() {
   loadFromStorage();
   renderAll();
   initQnoteSmartPaste();
+  startBackupScheduler();
 }
 
 init();
