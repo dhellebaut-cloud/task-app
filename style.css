@@ -891,6 +891,29 @@ button.sec-pill { cursor: pointer; }
 .pf select option { background: var(--bg3); }
 .pf textarea { resize: none; height: 54px; line-height: 1.5; }
 #p-from { height: auto; min-height: unset; resize: none; line-height: 1.5; overflow: hidden; }
+#p-notes {
+  width: 100%;
+  background: var(--bg3);
+  border: .5px solid var(--b2);
+  border-radius: 6px;
+  color: var(--t);
+  font-family: var(--sans);
+  font-size: 12px;
+  padding: 8px 10px;
+  outline: none;
+  min-height: 54px;
+  line-height: 1.5;
+  box-sizing: border-box;
+  word-break: break-word;
+  transition: border-color .15s;
+}
+#p-notes:focus { border-color: var(--ac); }
+#p-notes:empty::before {
+  content: attr(data-placeholder);
+  color: var(--t3);
+  pointer-events: none;
+}
+#p-notes a { color: #f0882a; text-decoration: underline; }
 
 .pfl {
   font-size: 10px;

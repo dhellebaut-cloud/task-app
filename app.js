@@ -763,7 +763,8 @@ function openPopup() {
   document.getElementById('ww-est-row').style.display = 'none';
   document.getElementById('p-est-h').value = '';
   document.getElementById('p-est-m').value = '';
-  ['p-title', 'p-from', 'p-notes'].forEach(id => document.getElementById(id).value = '');
+  ['p-title', 'p-from'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('p-notes').innerHTML = '';
   const pDue = document.getElementById('p-due');
   pDue.value = '';
   pDue.classList.add('empty');
@@ -810,7 +811,7 @@ function submitTask() {
     from:     document.getElementById('p-from').value.trim(),
     due:      document.getElementById('p-due').value,
     group:    document.getElementById('p-group').value,
-    notes:    document.getElementById('p-notes').value.trim(),
+    notes:    (() => { const el = document.getElementById('p-notes'); return el.innerText.trim() ? el.innerHTML : ''; })(),
     done:     false,
     created:  new Date().toISOString(),
     workWeek: wwChecked,
@@ -855,7 +856,10 @@ function startEdit(id) {
     pDueEdit.classList.toggle('empty', !t.due);
     document.getElementById('p-group').value  = t.group || '';
     renderGroupChips();
-    document.getElementById('p-notes').value  = t.notes || '';
+    const notesEl = document.getElementById('p-notes');
+    if (!t.notes) { notesEl.innerHTML = ''; }
+    else if (/<[a-z]/i.test(t.notes)) { notesEl.innerHTML = t.notes; }
+    else { notesEl.innerText = t.notes; }
 
     document.getElementById('prio-chk').classList.toggle('on', prioChecked);
     document.getElementById('prio-label').classList.toggle('on', prioChecked);
@@ -957,13 +961,29 @@ function quickNoteNewTask() {
   const plain = ed.innerText.trim();
   closeQuickNote();
   openPopup();
-  if (plain) document.getElementById('p-notes').value = plain;
+  if (plain) document.getElementById('p-notes').innerText = plain;
 }
 
 function renderNotes(notes) {
   if (!notes) return '';
   if (/<[a-z]/i.test(notes)) return notes;
   return linkify(esc(notes)).replace(/\n/g, '<br>');
+}
+
+function htmlToEditableText(html) {
+  if (!html || !/<[a-z]/i.test(html)) return html || '';
+  let t = html;
+  // Preserve link text + URL
+  t = t.replace(/<a\s[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, (_, href, inner) => {
+    const text = inner.replace(/<[^>]+>/g, '').trim();
+    return text && text !== href ? `${text} (${href})` : href;
+  });
+  t = t.replace(/<br\s*\/?>/gi, '\n');
+  t = t.replace(/<\/p>/gi, '\n');
+  t = t.replace(/<li[^>]*>/gi, '• ').replace(/<\/li>/gi, '\n');
+  t = t.replace(/<[^>]+>/g, '');
+  t = t.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"');
+  return t.replace(/\n{3,}/g, '\n\n').trim();
 }
 
 function isLongNote(notes) {
