@@ -1579,7 +1579,19 @@ function submitProject() {
 }
 
 /* ── Boot ── */
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem('tasks-app:theme', isLight ? 'light' : 'dark');
+}
+
+function loadTheme() {
+  if (localStorage.getItem('tasks-app:theme') === 'light') {
+    document.body.classList.add('light');
+  }
+}
+
 function init() {
+  loadTheme();
   loadFromStorage();
   renderAll();
 }
