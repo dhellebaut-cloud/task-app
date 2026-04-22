@@ -988,7 +988,7 @@ button.sec-pill { cursor: pointer; }
 .sp-date-input.empty::-webkit-datetime-edit { color: transparent; }
 .sp-date-input.empty::-webkit-datetime-edit-fields-wrapper { color: transparent; }
 .date-ph-wrap { position: relative; display: inline-flex; align-items: center; }
-.date-ph { display: none; position: absolute; left: 0; pointer-events: none; color: var(--t3); font-size: inherit; white-space: nowrap; }
+.date-ph { display: none; position: absolute; left: 0; pointer-events: none; color: var(--t2); font-size: inherit; white-space: nowrap; }
 .due-date-pick + .date-ph { left: 8px; }
 input[type=date].empty + .date-ph { display: block; }
 
