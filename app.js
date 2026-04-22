@@ -910,7 +910,9 @@ function closeQuickNote() {
 }
 
 function qnoteOverlayClick(e) {
-  if (e.target === document.getElementById('qnote-overlay')) closeQuickNote();
+  if (e.target !== document.getElementById('qnote-overlay')) return;
+  if (window.getSelection().toString().length > 0) return;
+  closeQuickNote();
 }
 
 function quickNoteAttach() {
