@@ -966,6 +966,14 @@ function renderNotes(notes) {
   return linkify(esc(notes)).replace(/\n/g, '<br>');
 }
 
+function isLongNote(notes) {
+  const plain = notes.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const hardBreaks = (notes.match(/<br\s*\/?>/gi) || []).length
+                   + (notes.match(/<\/li>/gi) || []).length
+                   + (notes.match(/\n/g) || []).length;
+  return plain.length > 140 || hardBreaks >= 2;
+}
+
 function toggleNotes(id) {
   document.getElementById('notes-' + id)?.classList.toggle('expanded');
 }
@@ -974,10 +982,6 @@ function toggleDet(id) {
   if (quickNoteSelecting) { selectTaskForNote(id); return; }
   document.getElementById('det-' + id).classList.toggle('op');
   document.getElementById('arr-' + id).classList.toggle('op');
-  setTimeout(() => {
-    const el = document.getElementById('notes-' + id);
-    if (el && el.scrollHeight <= el.clientHeight + 1) el.classList.add('short');
-  }, 0);
 }
 
 /* ── Build a single task card DOM node ── */
@@ -1031,7 +1035,7 @@ function makeCard(t) {
           ${t.due      ? `<span class="dl">Due</span><span class="dv">${new Date(t.due).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'long' })}</span>` : ''}
           ${g          ? `<span class="dl">Group</span><span class="dv"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${g.color};margin-right:4px;vertical-align:middle"></span>${esc(g.name)}</span>` : ''}
         </div>
-        ${t.notes ? `<div class="dnotes" id="notes-${t.id}" onclick="toggleNotes(${t.id})">${renderNotes(t.notes)}</div>` : ''}
+        ${t.notes ? `<div class="dnotes${isLongNote(t.notes) ? ' collapsible' : ''}" id="notes-${t.id}" onclick="toggleNotes(${t.id})">${renderNotes(t.notes)}</div>` : ''}
         <div class="det-ww-row">
           <div class="prio-chk-box${t.workWeek ? ' on' : ''}" onclick="event.stopPropagation();toggleTaskWW(${t.id})"><div class="tick"></div></div>
           <span class="prio-label${t.workWeek ? ' on' : ''}" onclick="event.stopPropagation();toggleTaskWW(${t.id})">Work week</span>
