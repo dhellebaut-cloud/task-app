@@ -486,9 +486,11 @@ function openSettings(section) {
   document.getElementById('sps-emoji').value               = profile.emoji      || '';
   document.getElementById('sps-emoji-display').textContent = profile.emoji      || '😀';
   document.getElementById('sps-slack-team').value          = profile.slackTeamId || '';
-  document.getElementById('ab-toggle').classList.toggle('on', autoBackup.enabled);
-  document.getElementById('ab-pat').value = autoBackup.pat || '';
-  updateBackupStatus();
+  if (activeSettingsSection === 'backup') {
+    document.getElementById('ab-toggle').classList.toggle('on', autoBackup.enabled);
+    document.getElementById('ab-pat').value = autoBackup.pat || '';
+    updateBackupStatus();
+  }
 }
 
 function closeSettings() {
@@ -506,12 +508,17 @@ function settingsOverlayClick(e) {
 
 function showSettingsSection(section) {
   activeSettingsSection = section;
-  ['general', 'groups', 'people'].forEach(s => {
+  ['general', 'groups', 'people', 'backup'].forEach(s => {
     document.getElementById('sps-' + s).classList.toggle('active', s === section);
     document.getElementById('sp-nav-' + s).classList.toggle('active', s === section);
   });
   if (section === 'groups') renderSettingsGroups();
   if (section === 'people') renderSettingsPeople();
+  if (section === 'backup') {
+    document.getElementById('ab-toggle').classList.toggle('on', autoBackup.enabled);
+    document.getElementById('ab-pat').value = autoBackup.pat || '';
+    updateBackupStatus();
+  }
 }
 
 const AVATAR_EMOJIS = [

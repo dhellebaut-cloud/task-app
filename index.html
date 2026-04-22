@@ -208,6 +208,9 @@
           <button class="sp-nav-btn" id="sp-nav-people" onclick="showSettingsSection('people')">
             <span>👥</span> People
           </button>
+          <button class="sp-nav-btn" id="sp-nav-backup" onclick="showSettingsSection('backup')">
+            <span>💾</span> Backup
+          </button>
         </nav>
       </div>
 
@@ -232,31 +235,6 @@
               <div class="emoji-picker" id="emoji-picker" style="display:none"></div>
             </div>
             <input type="hidden" id="sps-emoji" />
-          </div>
-
-          <div class="sp-sec-title" style="margin-top:20px">Data</div>
-          <div class="sp-sec-desc">Export your tasks and settings to a file, or import a backup.</div>
-          <div class="sp-data-btns">
-            <button class="sp-data-btn" onclick="exportData()">Export backup</button>
-            <button class="sp-data-btn" onclick="importData()">Import backup</button>
-          </div>
-
-          <div class="sp-sec-title" style="margin-top:20px">Automatic backup</div>
-          <div class="sp-sec-desc">Backs up to a private GitHub Gist every hour between 9 am and 6 pm. Requires a GitHub Personal Access Token with <code>gist</code> scope.</div>
-          <div class="sp-form-field">
-            <label class="sp-field-label">GitHub Personal Access Token</label>
-            <input type="password" id="ab-pat" class="sp-input" placeholder="ghp_..." oninput="saveAutoBackupPat()" autocomplete="off" />
-          </div>
-          <div class="ab-toggle-row">
-            <div class="ab-toggle" id="ab-toggle" onclick="toggleAutoBackup()"><div class="ab-toggle-knob"></div></div>
-            <span class="ab-toggle-label">Enable automatic backups</span>
-          </div>
-          <div class="ab-status-row">
-            <span class="ab-status" id="ab-status"></span>
-            <div style="display:flex;gap:6px">
-              <button class="sp-data-btn" onclick="runGistBackup(false)">Back up now</button>
-              <button class="sp-data-btn" onclick="importFromGist()">Restore from Gist</button>
-            </div>
           </div>
 
           <div class="sp-sec-title" style="margin-top:20px">Slack</div>
@@ -297,6 +275,34 @@
               <input type="text" id="sps-p-slack" class="sp-input sp-grow" placeholder="Slack User ID (e.g. U0G9QF9C6) — optional" />
             </div>
             <div class="crow" id="sps-p-colors"></div>
+          </div>
+        </div>
+
+        <!-- Backup -->
+        <div class="sp-sec" id="sps-backup">
+          <div class="sp-sec-title">Manual backup</div>
+          <div class="sp-sec-desc">Export your tasks and settings to a file, or import a backup.</div>
+          <div class="sp-data-btns">
+            <button class="sp-data-btn" onclick="exportData()">Export backup</button>
+            <button class="sp-data-btn" onclick="importData()">Import backup</button>
+          </div>
+
+          <div class="sp-sec-title" style="margin-top:20px">Automatic backup</div>
+          <div class="sp-sec-desc">Backs up to a private GitHub Gist every hour between 9 am and 6 pm. Requires a GitHub Personal Access Token with <code>gist</code> scope.</div>
+          <div class="sp-form-field">
+            <label class="sp-field-label">GitHub Personal Access Token</label>
+            <input type="password" id="ab-pat" class="sp-input" placeholder="ghp_..." oninput="saveAutoBackupPat()" autocomplete="off" />
+          </div>
+          <div class="ab-toggle-row">
+            <div class="ab-toggle" id="ab-toggle" onclick="toggleAutoBackup()"><div class="ab-toggle-knob"></div></div>
+            <span class="ab-toggle-label">Enable automatic backups</span>
+          </div>
+          <div class="ab-status-row">
+            <span class="ab-status" id="ab-status"></span>
+            <div style="display:flex;gap:6px">
+              <button class="sp-data-btn" onclick="runGistBackup(false)">Back up now</button>
+              <button class="sp-data-btn" onclick="importFromGist()">Restore from Gist</button>
+            </div>
           </div>
         </div>
 
