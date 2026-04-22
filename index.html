@@ -326,7 +326,15 @@
         <button class="close-btn" onclick="closeQuickNote()">×</button>
       </div>
       <div class="pop-body">
-        <textarea id="qnote-text" placeholder="Start typing your thoughts..." rows="6"></textarea>
+        <div class="qnote-toolbar">
+          <button class="qnote-tb-btn" onmousedown="event.preventDefault()" onclick="qnoteFormat('bold')" title="Bold (⌘B)"><strong>B</strong></button>
+          <button class="qnote-tb-btn" onmousedown="event.preventDefault()" onclick="qnoteFormat('italic')" title="Italic (⌘I)"><em>I</em></button>
+          <button class="qnote-tb-btn" onmousedown="event.preventDefault()" onclick="qnoteFormat('insertUnorderedList')" title="Bullet list">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><circle cx="2" cy="4" r="1.5"/><rect x="5" y="3" width="10" height="2" rx="1"/><circle cx="2" cy="9" r="1.5"/><rect x="5" y="8" width="10" height="2" rx="1"/><circle cx="2" cy="14" r="1.5"/><rect x="5" y="13" width="10" height="2" rx="1"/></svg>
+          </button>
+          <button class="qnote-tb-btn" onmousedown="event.preventDefault()" onclick="qnoteFormat('strikeThrough')" title="Strikethrough"><s>S</s></button>
+        </div>
+        <div id="qnote-editor" contenteditable="true" spellcheck="true" data-placeholder="Start typing your thoughts..."></div>
       </div>
       <div class="pop-footer qnote-footer">
         <button class="btn-cancel" onclick="closeQuickNote()">Cancel</button>

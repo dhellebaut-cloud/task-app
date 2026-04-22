@@ -890,10 +890,19 @@ function toggleCheck(id) {
 let quickNoteSelecting = false;
 let quickNoteText      = '';
 
+function qnoteFormat(cmd) {
+  document.execCommand(cmd, false, null);
+}
+
 function openQuickNote() {
-  document.getElementById('qnote-text').value = '';
+  const ed = document.getElementById('qnote-editor');
+  ed.innerHTML = '';
   document.getElementById('qnote-overlay').classList.add('vis');
-  setTimeout(() => document.getElementById('qnote-text').focus(), 50);
+  setTimeout(() => ed.focus(), 50);
+  ed.onkeydown = e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'b') { e.preventDefault(); qnoteFormat('bold'); }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'i') { e.preventDefault(); qnoteFormat('italic'); }
+  };
 }
 
 function closeQuickNote() {
@@ -905,8 +914,9 @@ function qnoteOverlayClick(e) {
 }
 
 function quickNoteAttach() {
-  quickNoteText = document.getElementById('qnote-text').value.trim();
-  if (!quickNoteText) return;
+  const ed = document.getElementById('qnote-editor');
+  if (!ed.innerText.trim()) return;
+  quickNoteText = ed.innerHTML;
   closeQuickNote();
   quickNoteSelecting = true;
   document.body.classList.add('qnote-select');
@@ -923,17 +933,31 @@ function cancelNoteSelection() {
 function selectTaskForNote(taskId) {
   const t = tasks.find(t => t.id === taskId);
   if (!t) return;
-  t.notes = t.notes ? t.notes + '\n\n' + quickNoteText : quickNoteText;
+  if (t.notes) {
+    const existing = /<[a-z]/i.test(t.notes)
+      ? t.notes
+      : esc(t.notes).replace(/\n/g, '<br>');
+    t.notes = existing + '<br><br>' + quickNoteText;
+  } else {
+    t.notes = quickNoteText;
+  }
   persist();
   renderList();
   cancelNoteSelection();
 }
 
 function quickNoteNewTask() {
-  const note = document.getElementById('qnote-text').value.trim();
+  const ed = document.getElementById('qnote-editor');
+  const plain = ed.innerText.trim();
   closeQuickNote();
   openPopup();
-  if (note) document.getElementById('p-notes').value = note;
+  if (plain) document.getElementById('p-notes').value = plain;
+}
+
+function renderNotes(notes) {
+  if (!notes) return '';
+  if (/<[a-z]/i.test(notes)) return notes;
+  return linkify(esc(notes)).replace(/\n/g, '<br>');
 }
 
 function toggleDet(id) {
@@ -993,7 +1017,7 @@ function makeCard(t) {
           ${t.due      ? `<span class="dl">Due</span><span class="dv">${new Date(t.due).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'long' })}</span>` : ''}
           ${g          ? `<span class="dl">Group</span><span class="dv"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${g.color};margin-right:4px;vertical-align:middle"></span>${esc(g.name)}</span>` : ''}
         </div>
-        ${t.notes ? `<div class="dnotes">${linkify(esc(t.notes))}</div>` : ''}
+        ${t.notes ? `<div class="dnotes">${renderNotes(t.notes)}</div>` : ''}
         <div class="det-ww-row">
           <div class="prio-chk-box${t.workWeek ? ' on' : ''}" onclick="event.stopPropagation();toggleTaskWW(${t.id})"><div class="tick"></div></div>
           <span class="prio-label${t.workWeek ? ' on' : ''}" onclick="event.stopPropagation();toggleTaskWW(${t.id})">Work week</span>

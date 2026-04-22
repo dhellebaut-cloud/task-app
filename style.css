@@ -735,9 +735,10 @@ button.sec-pill { cursor: pointer; }
   color: var(--t2);
   line-height: 1.7;
   background: var(--bg4);
-  white-space: pre-wrap;
   word-break: break-word;
 }
+.dnotes ul, .dnotes ol { padding-left: 18px; margin: 4px 0; }
+.dnotes li { margin: 2px 0; }
 .dnotes a {
   color: #8b87e0;
   text-decoration: none;
@@ -1109,7 +1110,29 @@ button.sec-pill { cursor: pointer; }
   width: 340px;
   overflow: hidden;
 }
-#qnote-popup textarea {
+.qnote-toolbar {
+  display: flex;
+  gap: 2px;
+  padding: 0 0 8px;
+}
+.qnote-tb-btn {
+  background: none;
+  border: .5px solid var(--b2);
+  border-radius: 5px;
+  color: var(--t2);
+  font-family: var(--sans);
+  font-size: 12px;
+  padding: 3px 8px;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: background .12s, color .12s;
+  display: flex;
+  align-items: center;
+}
+.qnote-tb-btn:hover { background: var(--bg4); color: var(--t); }
+.qnote-tb-btn strong { font-weight: 700; }
+.qnote-tb-btn em { font-style: italic; }
+#qnote-editor {
   width: 100%;
   background: var(--bg3);
   border: .5px solid var(--b2);
@@ -1119,12 +1142,20 @@ button.sec-pill { cursor: pointer; }
   font-size: 13px;
   line-height: 1.6;
   padding: 10px 12px;
-  resize: none;
   outline: none;
   min-height: 140px;
   box-sizing: border-box;
+  word-break: break-word;
+  overflow-y: auto;
 }
-#qnote-popup textarea:focus { border-color: var(--ac); }
+#qnote-editor:focus { border-color: var(--ac); }
+#qnote-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--t3);
+  pointer-events: none;
+}
+#qnote-editor ul, #qnote-editor ol { padding-left: 18px; margin: 4px 0; }
+#qnote-editor li { margin: 2px 0; }
 .qnote-footer { gap: 6px; }
 .btn-qnote-attach {
   padding: 7px 12px;
