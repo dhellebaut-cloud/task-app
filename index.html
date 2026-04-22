@@ -253,7 +253,10 @@
           </div>
           <div class="ab-status-row">
             <span class="ab-status" id="ab-status"></span>
-            <button class="sp-data-btn" onclick="runGistBackup(false)">Back up now</button>
+            <div style="display:flex;gap:6px">
+              <button class="sp-data-btn" onclick="runGistBackup(false)">Back up now</button>
+              <button class="sp-data-btn" onclick="importFromGist()">Restore from Gist</button>
+            </div>
           </div>
 
           <div class="sp-sec-title" style="margin-top:20px">Slack</div>

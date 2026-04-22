@@ -566,6 +566,19 @@ function exportData() {
   URL.revokeObjectURL(a.href);
 }
 
+function applyBackupData(d) {
+  if (d.tasks)    tasks    = d.tasks;
+  if (d.groups)   groups   = d.groups;
+  if (d.people)   people   = d.people;
+  if (d.profile)  profile  = d.profile;
+  if (d.links)    links    = d.links;
+  if (d.projects) projects = d.projects;
+  if (d.nextId)   nextId   = d.nextId;
+  persist();
+  renderAll();
+  openSettings('general');
+}
+
 function importData() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -575,21 +588,8 @@ function importData() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
-      try {
-        const d = JSON.parse(ev.target.result);
-        if (d.tasks)   tasks   = d.tasks;
-        if (d.groups)  groups  = d.groups;
-        if (d.people)  people  = d.people;
-        if (d.profile) profile = d.profile;
-        if (d.links)     links    = d.links;
-        if (d.projects)  projects = d.projects;
-        if (d.nextId)    nextId   = d.nextId;
-        persist();
-        renderAll();
-        openSettings('general');
-      } catch (_) {
-        alert('Invalid backup file.');
-      }
+      try { applyBackupData(JSON.parse(ev.target.result)); }
+      catch (_) { alert('Invalid backup file.'); }
     };
     reader.readAsText(file);
   };
@@ -654,6 +654,30 @@ async function runGistBackup(silent = false) {
     }
   } catch (e) {
     if (!silent) updateBackupStatus('Network error');
+  }
+}
+
+async function importFromGist() {
+  if (!autoBackup.pat || !autoBackup.gistId) {
+    updateBackupStatus('No backup found — back up first');
+    return;
+  }
+  updateBackupStatus('Fetching…');
+  try {
+    const res = await fetch('https://api.github.com/gists/' + autoBackup.gistId, {
+      headers: {
+        'Authorization': 'token ' + autoBackup.pat,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
+    });
+    if (!res.ok) { updateBackupStatus('Fetch failed (' + res.status + ')'); return; }
+    const gist = await res.json();
+    const content = gist.files['tasks-backup.json']?.content;
+    if (!content) { updateBackupStatus('Backup file not found in Gist'); return; }
+    applyBackupData(JSON.parse(content));
+  } catch (e) {
+    updateBackupStatus('Network error');
   }
 }
 
