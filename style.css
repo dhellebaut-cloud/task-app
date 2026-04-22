@@ -736,7 +736,29 @@ button.sec-pill { cursor: pointer; }
   line-height: 1.7;
   background: var(--bg4);
   word-break: break-word;
+  max-height: 70px; /* ~3 lines */
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
 }
+.dnotes::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 28px;
+  background: linear-gradient(transparent, var(--bg4));
+  pointer-events: none;
+}
+.dnotes.expanded {
+  max-height: none;
+  cursor: default;
+}
+.dnotes.expanded::after { display: none; }
+.dnotes.short {
+  max-height: none;
+  cursor: default;
+}
+.dnotes.short::after { display: none; }
 .dnotes ul, .dnotes ol { padding-left: 18px; margin: 4px 0; }
 .dnotes li { margin: 2px 0; }
 .dnotes a {
