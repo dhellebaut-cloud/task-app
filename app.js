@@ -1322,9 +1322,9 @@ function renderProjectCard(p) {
       ${p.deadline
         ? `<span class="date-set-val">${new Date(p.deadline + 'T00:00:00').toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'})}</span>
            <button class="date-clear-btn" onclick="event.stopPropagation();updateProjectField('${p.id}','deadline','')">×</button>`
-        : `<input class="proj-deadline-input empty" type="date"
+        : `<span class="date-ph-wrap"><input class="proj-deadline-input empty" type="date"
                   onclick="event.stopPropagation()"
-                  onchange="this.classList.remove('empty');if(this.value)updateProjectField('${p.id}','deadline',this.value)" />`
+                  onchange="this.classList.remove('empty');if(this.value)updateProjectField('${p.id}','deadline',this.value)" /><span class="date-ph">DD/MM/YYYY</span></span>`
       }
     </div>` : '';
 
@@ -1377,8 +1377,8 @@ function renderSubtaskRow(projectId, s, projColor) {
                <span class="date-set-val">${new Date(s.due + 'T00:00:00').toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'})}</span>
                <button class="date-clear-btn" onclick="updateSubtaskField('${projectId}','${s.id}','due','',true)">×</button>
              </div>`
-          : `<input class="sp-input sp-date-input empty" type="date"
-                    onchange="this.classList.remove('empty');if(this.value)updateSubtaskField('${projectId}','${s.id}','due',this.value,true)" />`
+          : `<span class="date-ph-wrap"><input class="sp-input sp-date-input empty" type="date"
+                    onchange="this.classList.remove('empty');if(this.value)updateSubtaskField('${projectId}','${s.id}','due',this.value,true)" /><span class="date-ph">DD/MM/YYYY</span></span>`
         }
       </div>
       <div class="pf">
