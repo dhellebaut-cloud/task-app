@@ -1681,10 +1681,40 @@ function loadTheme() {
   }
 }
 
+function initQnoteSmartPaste() {
+  document.getElementById('qnote-editor').addEventListener('paste', e => {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) return;
+    const clipText = e.clipboardData?.getData('text/plain')?.trim();
+    if (!clipText) return;
+    let isUrl = false;
+    try { const u = new URL(clipText); isUrl = u.protocol === 'http:' || u.protocol === 'https:'; } catch {}
+    if (!isUrl) return;
+    e.preventDefault();
+    const range = sel.getRangeAt(0);
+    const content = range.extractContents();
+    const a = document.createElement('a');
+    a.href = clipText;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.style.color = '#f0882a';
+    a.style.textDecoration = 'underline';
+    a.style.textDecorationColor = '#f0882a';
+    a.appendChild(content);
+    range.insertNode(a);
+    const next = document.createRange();
+    next.setStartAfter(a);
+    next.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(next);
+  });
+}
+
 function init() {
   loadTheme();
   loadFromStorage();
   renderAll();
+  initQnoteSmartPaste();
 }
 
 init();

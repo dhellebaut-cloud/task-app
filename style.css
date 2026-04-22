@@ -1129,7 +1129,7 @@ button.sec-pill { cursor: pointer; }
   background: var(--bg2);
   border: .5px solid var(--b2);
   border-radius: 10px;
-  width: 340px;
+  width: min(620px, 92vw);
   overflow: hidden;
 }
 .qnote-toolbar {
@@ -1161,11 +1161,11 @@ button.sec-pill { cursor: pointer; }
   border-radius: 6px;
   color: var(--t);
   font-family: var(--sans);
-  font-size: 13px;
-  line-height: 1.6;
-  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 12px 14px;
   outline: none;
-  min-height: 140px;
+  min-height: 220px;
   box-sizing: border-box;
   word-break: break-word;
   overflow-y: auto;
