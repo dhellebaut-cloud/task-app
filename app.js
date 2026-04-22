@@ -886,7 +886,58 @@ function toggleCheck(id) {
 }
 
 /* ── Expand / collapse task detail ── */
+/* ── Quick note ── */
+let quickNoteSelecting = false;
+let quickNoteText      = '';
+
+function openQuickNote() {
+  document.getElementById('qnote-text').value = '';
+  document.getElementById('qnote-overlay').classList.add('vis');
+  setTimeout(() => document.getElementById('qnote-text').focus(), 50);
+}
+
+function closeQuickNote() {
+  document.getElementById('qnote-overlay').classList.remove('vis');
+}
+
+function qnoteOverlayClick(e) {
+  if (e.target === document.getElementById('qnote-overlay')) closeQuickNote();
+}
+
+function quickNoteAttach() {
+  quickNoteText = document.getElementById('qnote-text').value.trim();
+  if (!quickNoteText) return;
+  closeQuickNote();
+  quickNoteSelecting = true;
+  document.body.classList.add('qnote-select');
+  document.getElementById('qnote-select-banner').classList.add('vis');
+}
+
+function cancelNoteSelection() {
+  quickNoteSelecting = false;
+  quickNoteText = '';
+  document.body.classList.remove('qnote-select');
+  document.getElementById('qnote-select-banner').classList.remove('vis');
+}
+
+function selectTaskForNote(taskId) {
+  const t = tasks.find(t => t.id === taskId);
+  if (!t) return;
+  t.notes = t.notes ? t.notes + '\n\n' + quickNoteText : quickNoteText;
+  persist();
+  renderList();
+  cancelNoteSelection();
+}
+
+function quickNoteNewTask() {
+  const note = document.getElementById('qnote-text').value.trim();
+  closeQuickNote();
+  openPopup();
+  if (note) document.getElementById('p-notes').value = note;
+}
+
 function toggleDet(id) {
+  if (quickNoteSelecting) { selectTaskForNote(id); return; }
   document.getElementById('det-' + id).classList.toggle('op');
   document.getElementById('arr-' + id).classList.toggle('op');
 }

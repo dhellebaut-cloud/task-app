@@ -82,6 +82,10 @@
             <div class="plus-icon"></div>
             Add project
           </button>
+          <button class="add-qnote-btn" onclick="openQuickNote()">
+            <div class="plus-icon qnote-plus"></div>
+            Quick note
+          </button>
         </div>
 
         <!-- Scrollable area -->
@@ -312,6 +316,30 @@
         <button class="btn-add" onclick="submitProject()">Create project</button>
       </div>
     </div>
+  </div>
+
+  <!-- ── QUICK NOTE OVERLAY ── -->
+  <div id="qnote-overlay" onclick="qnoteOverlayClick(event)">
+    <div id="qnote-popup">
+      <div class="pop-hdr">
+        <span class="pop-title">Quick note</span>
+        <button class="close-btn" onclick="closeQuickNote()">×</button>
+      </div>
+      <div class="pop-body">
+        <textarea id="qnote-text" placeholder="Start typing your thoughts..." rows="6"></textarea>
+      </div>
+      <div class="pop-footer qnote-footer">
+        <button class="btn-cancel" onclick="closeQuickNote()">Cancel</button>
+        <button class="btn-qnote-attach" onclick="quickNoteAttach()">Attach to task</button>
+        <button class="btn-add" onclick="quickNoteNewTask()">New task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── QUICK NOTE SELECTION BANNER ── -->
+  <div id="qnote-select-banner">
+    <span class="qnote-banner-text">Tap a task to attach your note</span>
+    <button class="qnote-banner-cancel" onclick="cancelNoteSelection()">Cancel</button>
   </div>
 
   <script src="app.js"></script>

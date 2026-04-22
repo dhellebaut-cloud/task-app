@@ -1069,6 +1069,117 @@ button.sec-pill { cursor: pointer; }
 .add-proj-btn .plus-icon::before { width: 8px; height: 1.5px; background: #6fcf8e; }
 .add-proj-btn .plus-icon::after  { width: 1.5px; height: 8px; background: #6fcf8e; }
 
+.add-qnote-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #7a3a0a;
+  border: none;
+  border-radius: 6px;
+  color: #f0c090;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 10px 5px 8px;
+  cursor: pointer;
+  transition: background .15s;
+  flex-shrink: 0;
+}
+.add-qnote-btn:hover { background: #a04a10; }
+.add-qnote-btn .plus-icon { width: 10px; height: 10px; flex-shrink: 0; }
+.add-qnote-btn .plus-icon::before { width: 8px; height: 1.5px; background: #f0c090; }
+.add-qnote-btn .plus-icon::after  { width: 1.5px; height: 8px; background: #f0c090; }
+
+/* ── Quick note overlay & popup ── */
+#qnote-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 100;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 50px;
+}
+#qnote-overlay.vis { display: flex; }
+#qnote-popup {
+  background: var(--bg2);
+  border: .5px solid var(--b2);
+  border-radius: 10px;
+  width: 340px;
+  overflow: hidden;
+}
+#qnote-popup textarea {
+  width: 100%;
+  background: var(--bg3);
+  border: .5px solid var(--b2);
+  border-radius: 6px;
+  color: var(--t);
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 10px 12px;
+  resize: none;
+  outline: none;
+  min-height: 140px;
+  box-sizing: border-box;
+}
+#qnote-popup textarea:focus { border-color: var(--ac); }
+.qnote-footer { gap: 6px; }
+.btn-qnote-attach {
+  padding: 7px 12px;
+  background: #7a3a0a;
+  border: none;
+  border-radius: 6px;
+  color: #f0c090;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .15s;
+  white-space: nowrap;
+}
+.btn-qnote-attach:hover { background: #a04a10; }
+
+/* ── Quick note selection banner ── */
+#qnote-select-banner {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 300;
+  background: #8a3e08;
+  border-top: 1px solid #c05010;
+  padding: 12px 20px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+#qnote-select-banner.vis { display: flex; }
+.qnote-banner-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: #fdd5a0;
+}
+.qnote-banner-cancel {
+  background: rgba(0,0,0,.25);
+  border: .5px solid rgba(255,255,255,.2);
+  border-radius: 6px;
+  color: #fdd5a0;
+  font-family: var(--sans);
+  font-size: 11px;
+  padding: 5px 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .12s;
+}
+.qnote-banner-cancel:hover { background: rgba(0,0,0,.4); }
+
+/* Task cards in selection mode */
+body.qnote-select .tc { cursor: pointer; }
+body.qnote-select .tc:hover { border-color: #f0882a !important; box-shadow: 0 0 0 1px #f0882a inset; }
+body.qnote-select .trow-del,
+body.qnote-select .trow-ping { pointer-events: none; opacity: 0 !important; }
+
 /* ── Project popup ── */
 #proj-overlay {
   display: none;
