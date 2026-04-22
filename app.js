@@ -1438,7 +1438,7 @@ function renderProjectCard(p) {
            <button class="date-clear-btn" onclick="event.stopPropagation();updateProjectField('${p.id}','deadline','')">×</button>`
         : `<span class="date-ph-wrap"><input class="proj-deadline-input empty" type="date"
                   onclick="event.stopPropagation()"
-                  onchange="this.classList.remove('empty');if(this.value)updateProjectField('${p.id}','deadline',this.value)" /><span class="date-ph">DD/MM/YYYY</span></span>`
+                  onchange="this.classList.remove('empty');if(this.value)updateProjectField('${p.id}','deadline',this.value)" /><span class="date-ph">dd/mm/yyyy</span></span>`
       }
     </div>` : '';
 
@@ -1492,7 +1492,7 @@ function renderSubtaskRow(projectId, s, projColor) {
                <button class="date-clear-btn" onclick="updateSubtaskField('${projectId}','${s.id}','due','',true)">×</button>
              </div>`
           : `<span class="date-ph-wrap"><input class="sp-input sp-date-input empty" type="date"
-                    onchange="this.classList.remove('empty');if(this.value)updateSubtaskField('${projectId}','${s.id}','due',this.value,true)" /><span class="date-ph">DD/MM/YYYY</span></span>`
+                    onchange="this.classList.remove('empty');if(this.value)updateSubtaskField('${projectId}','${s.id}','due',this.value,true)" /><span class="date-ph">dd/mm/yyyy</span></span>`
         }
       </div>
       <div class="pf">
