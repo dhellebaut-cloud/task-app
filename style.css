@@ -1326,6 +1326,7 @@ body.qnote-select .trow-ping { pointer-events: none; opacity: 0 !important; }
   position: relative;
 }
 .proj-hdr:hover .proj-archive-btn { opacity: 1; }
+.proj-hdr.gdrop-proj { background: rgba(127,119,221,.1); outline: 1px dashed var(--ac); outline-offset: -2px; border-radius: 4px; }
 .proj-arrow {
   color: var(--t3);
   flex-shrink: 0;

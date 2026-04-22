@@ -1110,6 +1110,53 @@ function taskDragStart(e, id) {
 function taskDragEnd() {
   dragTaskId = null;
   document.querySelectorAll('.gtab').forEach(t => t.classList.remove('gdrop'));
+  document.querySelectorAll('.proj-hdr').forEach(h => h.classList.remove('gdrop-proj'));
+}
+
+function taskDragOverProject(e, projectId) {
+  if (!dragTaskId) return;
+  const task = tasks.find(t => t.id === dragTaskId);
+  if (!task || task.done) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('gdrop-proj');
+}
+
+function taskDragLeaveProject(e) {
+  e.currentTarget.classList.remove('gdrop-proj');
+}
+
+function taskDropOnProject(e, projectId) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('gdrop-proj');
+  if (!dragTaskId) return;
+  const taskIndex = tasks.findIndex(t => t.id === dragTaskId);
+  if (taskIndex === -1) return;
+  const task = tasks[taskIndex];
+  if (task.done) return;
+  const project = projects.find(p => p.id === projectId);
+  if (!project) return;
+
+  const subtask = {
+    id:       'st' + Date.now() + Math.random().toString(36).slice(2, 6),
+    title:    task.title,
+    done:     false,
+    priority: task.priority,
+    from:     task.from || '',
+    due:      task.due || '',
+    link:     '',
+    notes:    task.notes || '',
+    workWeek: task.workWeek || false,
+    estimate: task.estimate || null,
+    created:  task.created,
+  };
+
+  project.subtasks.push(subtask);
+  tasks.splice(taskIndex, 1);
+  dragTaskId = null;
+  persist();
+  renderList();
+  renderProjects();
 }
 
 function taskDropOnGroup(e, groupId) {
@@ -1282,7 +1329,10 @@ function renderProjectCard(p) {
     </div>` : '';
 
   return `<div class="proj-card" id="proj-${p.id}">
-    <div class="proj-hdr" onclick="toggleProject('${p.id}')">
+    <div class="proj-hdr" onclick="toggleProject('${p.id}')"
+         ondragover="taskDragOverProject(event,'${p.id}')"
+         ondragleave="taskDragLeaveProject(event)"
+         ondrop="taskDropOnProject(event,'${p.id}')">
       <svg class="proj-arrow${p.collapsed ? '' : ' open'}" width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,2.5 4,5.5 6.5,2.5"/></svg>
       <span class="proj-dot" style="background:${p.color}" title="Change colour" onclick="event.stopPropagation();toggleProjectColorPicker('${p.id}',this)"></span>
       <input class="proj-name-input" value="${esc(p.title)}" size="${Math.max(p.title.length, 3)}"
