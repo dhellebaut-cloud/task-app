@@ -489,7 +489,9 @@ function closeSettings() {
 }
 
 function settingsOverlayClick(e) {
-  if (e.target === document.getElementById('settings-overlay')) closeSettings();
+  if (e.target !== document.getElementById('settings-overlay')) return;
+  if (window.getSelection().toString().length > 0) return;
+  closeSettings();
 }
 
 function showSettingsSection(section) {
@@ -785,7 +787,9 @@ function closePopup() {
 }
 
 function overlayClick(e) {
-  if (e.target === document.getElementById('overlay')) closePopup();
+  if (e.target !== document.getElementById('overlay')) return;
+  if (window.getSelection().toString().length > 0) return;
+  closePopup();
 }
 
 function togglePrioChk() {
@@ -1606,7 +1610,9 @@ function closeProjectPopup() {
 }
 
 function projOverlayClick(e) {
-  if (e.target === document.getElementById('proj-overlay')) closeProjectPopup();
+  if (e.target !== document.getElementById('proj-overlay')) return;
+  if (window.getSelection().toString().length > 0) return;
+  closeProjectPopup();
 }
 
 function renderProjectPopupSubtasks() {
