@@ -264,12 +264,12 @@ function linkify(s) {
 
 function dueTxt(due) {
   if (!due) return null;
-  const d    = new Date(due);
-  const now  = new Date();
-  const diff = Math.round((d - now) / 864e5);
+  const d     = new Date(due + 'T00:00:00');
+  const today = new Date(getToday() + 'T00:00:00');
+  const diff  = Math.round((d - today) / 864e5);
   const label = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-  const cls  = diff < 0 ? 'ov' : diff <= 2 ? 'sn' : '';
-  const pre  = diff < 0 ? 'Overdue · ' : diff === 0 ? 'Today · ' : diff <= 2 ? diff + 'd · ' : '';
+  const cls   = diff < 0 ? 'ov' : diff <= 2 ? 'sn' : '';
+  const pre   = diff < 0 ? 'Overdue · ' : diff === 0 ? 'Due today · ' : diff <= 2 ? diff + 'd · ' : '';
   return { label: pre + label, cls };
 }
 
