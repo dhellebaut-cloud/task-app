@@ -1907,3 +1907,12 @@ function init() {
 }
 
 init();
+
+document.addEventListener('wheel', function(e) {
+  const overlays = ['overlay', 'proj-overlay', 'settings-overlay', 'qnote-overlay', 'ping-overlay'];
+  if (overlays.some(id => document.getElementById(id)?.classList.contains('vis'))) return;
+  const scrollArea = document.getElementById('scroll-area');
+  if (!scrollArea) return;
+  if (scrollArea.contains(e.target)) return;
+  scrollArea.scrollTop += e.deltaY;
+}, { passive: true });
