@@ -36,7 +36,6 @@ function renderAll() {
   renderGBar();
   renderList();
   setFilter(activeFilter);
-  renderStatsBar();
   renderProfileBar();
   renderLinksShelf();
   renderProjects();
@@ -159,7 +158,6 @@ let activeSettingsSection  = 'general';
 let prioChecked  = false;    // state of priority checkbox in popup
 let dueSel       = '';       // '' | 'today' | 'week' | 'date'
 let taskEmoji    = '';
-let statsConfig  = { enabled: false, period: 'week' };
 
 /* ── Persistence (localStorage) ── */
 function persist() {
@@ -494,7 +492,6 @@ function openSettings(section) {
   document.getElementById('sps-emoji-display').textContent = profile.emoji      || '😀';
   document.getElementById('sps-slack-team').value          = profile.slackTeamId || '';
   document.getElementById('sps-app-title').value           = profile.appTitle   || '';
-  document.getElementById('stats-toggle').classList.toggle('on', statsConfig.enabled);
   if (activeSettingsSection === 'backup') {
     document.getElementById('ab-toggle').classList.toggle('on', autoBackup.enabled);
     document.getElementById('ab-pat').value = autoBackup.pat || '';
@@ -725,7 +722,7 @@ function renderProfileBar() {
   const greeting = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
   el.innerHTML =
     `${profile.emoji ? `<span class="profile-bar-emoji">${profile.emoji}</span>` : ''}
-     ${profile.name  ? `<span class="profile-bar-greeting">${greeting},</span><span class="profile-bar-name">${esc(profile.name)}</span>` : ''}`;
+     ${profile.name  ? `<div class="profile-bar-nameline"><span class="profile-bar-greeting">${greeting},</span><span class="profile-bar-name">${esc(profile.name)}</span></div>` : ''}`;
 }
 
 /* ── Settings: Groups ── */
@@ -1039,7 +1036,6 @@ function toggleCheck(id) {
     t.completedAt = t.done ? new Date().toISOString() : null;
     persist();
     renderList();
-    renderStatsBar();
   }
 }
 
@@ -1499,6 +1495,8 @@ function renderProjectCard(p) {
          ondrop="taskDropOnProject(event,'${p.id}')">
       <svg class="proj-arrow${p.collapsed ? '' : ' open'}" width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,2.5 4,5.5 6.5,2.5"/></svg>
       <span class="proj-dot" style="background:${p.color}" title="Change colour" onclick="event.stopPropagation();toggleProjectColorPicker('${p.id}',this)"></span>
+      <button class="proj-emoji-btn" id="proj-emoji-btn-${p.id}" onclick="event.stopPropagation();toggleProjectEmojiPicker(event,'${p.id}')" title="Add emoji">${p.emoji || '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>'}</button>
+      <div class="task-emoji-picker-dropdown" id="proj-emoji-picker-${p.id}" style="display:none"></div>
       <input class="proj-name-input" value="${esc(p.title)}" size="${Math.max(p.title.length, 3)}"
              onclick="event.stopPropagation()"
              oninput="this.size=Math.max(this.value.length,3)"
@@ -1631,7 +1629,6 @@ function toggleSubtaskDone(projectId, subtaskId) {
   if (!wasAllDone && isNowAllDone) launchConfetti();
   persist();
   renderProjects();
-  renderStatsBar();
 }
 
 function toggleSubtaskExpand(subtaskId) {
@@ -1915,7 +1912,7 @@ function submitProject() {
     created: new Date().toISOString()
   }));
   projects.unshift({
-    id: 'p' + Date.now(), title, color: gc(selProjectColor), deadline,
+    id: 'p' + Date.now(), title, color: gc(selProjectColor), deadline, emoji: '',
     subtasks, collapsed: true, archived: false, created: new Date().toISOString()
   });
   persist();
@@ -2027,96 +2024,27 @@ function clearAllDone() {
   tasks = tasks.filter(t => !t.done);
   persist();
   renderList();
-  renderStatsBar();
 }
 
 /* ── Confetti ── */
 function launchConfetti() {
-  const canvas = document.createElement('canvas');
-  canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;width:100%;height:100%';
-  canvas.width  = window.innerWidth;
-  canvas.height = window.innerHeight;
-  document.body.appendChild(canvas);
-  const ctx    = canvas.getContext('2d');
   const colors = ['#7f77dd','#1d9e75','#ef9f27','#d85a30','#f43f5e','#14b8a6','#fcd34d'];
-  const parts  = Array.from({ length: 70 }, () => ({
-    x: Math.random() * canvas.width, y: -10,
-    vx: (Math.random() - 0.5) * 4, vy: Math.random() * 3 + 2,
-    size: Math.random() * 7 + 4, color: colors[Math.floor(Math.random() * colors.length)],
-    angle: Math.random() * Math.PI * 2, spin: (Math.random() - 0.5) * 0.18, alpha: 1,
-  }));
-  let raf;
-  function tick() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    let alive = 0;
-    for (const p of parts) {
-      p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.angle += p.spin;
-      if (p.y > canvas.height * 0.65) p.alpha -= 0.025;
-      if (p.alpha <= 0) continue;
-      alive++;
-      ctx.save();
-      ctx.translate(p.x, p.y); ctx.rotate(p.angle);
-      ctx.globalAlpha = Math.max(0, p.alpha);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.55);
-      ctx.restore();
-    }
-    if (alive > 0) raf = requestAnimationFrame(tick);
-    else { canvas.remove(); cancelAnimationFrame(raf); }
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden';
+  document.body.appendChild(wrap);
+  for (let i = 0; i < 72; i++) {
+    const el = document.createElement('div');
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const x     = Math.random() * 100;
+    const delay = Math.random() * 500;
+    const dur   = 1100 + Math.random() * 900;
+    const w     = 5 + Math.random() * 6;
+    const h     = w * 0.55;
+    const drift = ((Math.random() - 0.5) * 140).toFixed(1);
+    el.style.cssText = `position:absolute;left:${x}%;top:-12px;width:${w.toFixed(1)}px;height:${h.toFixed(1)}px;background:${color};border-radius:1px;animation:confetti-fall ${dur.toFixed(0)}ms ${delay.toFixed(0)}ms ease-in both;--drift:${drift}px`;
+    wrap.appendChild(el);
   }
-  tick();
-}
-
-/* ── Stats bar ── */
-function loadStatsConfig() {
-  try {
-    const s = localStorage.getItem('tasks-app:stats');
-    if (s) statsConfig = { ...statsConfig, ...JSON.parse(s) };
-  } catch (_) {}
-}
-function saveStatsConfig() {
-  localStorage.setItem('tasks-app:stats', JSON.stringify(statsConfig));
-}
-function toggleStatsEnabled() {
-  statsConfig.enabled = !statsConfig.enabled;
-  document.getElementById('stats-toggle').classList.toggle('on', statsConfig.enabled);
-  saveStatsConfig();
-  renderStatsBar();
-}
-function setStatsPeriod(p) {
-  statsConfig.period = p;
-  saveStatsConfig();
-  renderStatsBar();
-}
-function renderStatsBar() {
-  const el = document.getElementById('stats-bar');
-  if (!el) return;
-  if (!statsConfig.enabled) { el.innerHTML = ''; return; }
-  const now   = new Date();
-  const today = getToday();
-  const allItems = [
-    ...tasks.filter(t => t.done && t.completedAt),
-    ...projects.flatMap(p => p.subtasks.filter(s => s.done && s.completedAt)),
-  ];
-  let count = 0;
-  if (statsConfig.period === 'day') {
-    count = allItems.filter(x => x.completedAt.slice(0, 10) === today).length;
-  } else if (statsConfig.period === 'week') {
-    const d = new Date(now); d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1)); d.setHours(0,0,0,0);
-    count = allItems.filter(x => new Date(x.completedAt) >= d).length;
-  } else {
-    const d = new Date(now.getFullYear(), now.getMonth(), 1);
-    count = allItems.filter(x => new Date(x.completedAt) >= d).length;
-  }
-  el.innerHTML = `<div class="stats-bar-inner">
-    <span class="stats-count">${count}</span>
-    <span class="stats-desc">completed</span>
-    <div class="stats-period">
-      ${['day','week','month'].map(p =>
-        `<button class="spt${statsConfig.period === p ? ' on' : ''}" onclick="setStatsPeriod('${p}')">${p.charAt(0).toUpperCase() + p.slice(1)}</button>`
-      ).join('')}
-    </div>
-  </div>`;
+  setTimeout(() => wrap.remove(), 2200);
 }
 
 /* ── Task emoji picker ── */
@@ -2151,6 +2079,55 @@ function pickTaskEmoji(em) {
   if (disp) { disp.textContent = taskEmoji; disp.closest('.task-emoji-btn')?.classList.toggle('has-emoji', !!taskEmoji); }
   document.getElementById('task-emoji-picker').style.display = 'none';
   document.removeEventListener('click', taskEmojiOutside);
+}
+
+/* ── Project emoji picker ── */
+let activeProjectEmojiId = null;
+function toggleProjectEmojiPicker(e, projectId) {
+  e.stopPropagation();
+  const picker = document.getElementById('proj-emoji-picker-' + projectId);
+  if (!picker) return;
+  if (activeProjectEmojiId && activeProjectEmojiId !== projectId) {
+    const prev = document.getElementById('proj-emoji-picker-' + activeProjectEmojiId);
+    if (prev) prev.style.display = 'none';
+  }
+  if (picker.style.display !== 'none') {
+    picker.style.display = 'none';
+    activeProjectEmojiId = null;
+    document.removeEventListener('click', projectEmojiOutside);
+    return;
+  }
+  const p = projects.find(x => x.id === projectId);
+  const cur = p ? p.emoji || '' : '';
+  picker.innerHTML =
+    `<button type="button" class="emoji-opt proj-emoji-clear${!cur ? ' sel' : ''}" onclick="pickProjectEmoji('${projectId}','')">✕</button>` +
+    TASK_EMOJIS.map(em =>
+      `<button type="button" class="emoji-opt${cur === em ? ' sel' : ''}" onclick="pickProjectEmoji('${projectId}','${em}')">${em}</button>`
+    ).join('');
+  picker.style.display = 'flex';
+  activeProjectEmojiId = projectId;
+  setTimeout(() => document.addEventListener('click', projectEmojiOutside), 0);
+}
+function projectEmojiOutside(e) {
+  if (!activeProjectEmojiId) return;
+  const picker = document.getElementById('proj-emoji-picker-' + activeProjectEmojiId);
+  const btn    = document.getElementById('proj-emoji-btn-' + activeProjectEmojiId);
+  if (picker && !picker.contains(e.target) && btn && !btn.contains(e.target)) {
+    picker.style.display = 'none';
+    activeProjectEmojiId = null;
+    document.removeEventListener('click', projectEmojiOutside);
+  }
+}
+function pickProjectEmoji(projectId, em) {
+  const p = projects.find(x => x.id === projectId);
+  if (!p) return;
+  p.emoji = em;
+  persist();
+  const picker = document.getElementById('proj-emoji-picker-' + projectId);
+  if (picker) picker.style.display = 'none';
+  activeProjectEmojiId = null;
+  document.removeEventListener('click', projectEmojiOutside);
+  renderProjects();
 }
 
 /* ── Subtask rich text ── */
@@ -2227,7 +2204,6 @@ function init() {
   loadColorTheme();
   loadDensity();
   loadFontSize();
-  loadStatsConfig();
   loadFromStorage();
   renderAll();
   initQnoteSmartPaste();

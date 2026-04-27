@@ -235,7 +235,7 @@ body {
   padding: 37px 16px 0;
 }
 .profile-bar-emoji { font-size: 32px; line-height: 1; }
-.profile-bar-name  { font-size: 24px; font-weight: 700; color: var(--t); }
+.profile-bar-name  { font-size: 20px; font-weight: 700; color: var(--t); }
 .date-bar {
   padding: 6px 16px 12px;
   font-size: 11px;
@@ -543,7 +543,7 @@ body {
   cursor: default;
   transition: background .15s, color .15s, border-color .15s;
 }
-button.sec-pill { cursor: pointer; }
+button.sec-pill { cursor: pointer; position: relative; }
 .sec-pill:hover {
   background: var(--gc) !important;
   border-color: var(--gc) !important;
@@ -1362,6 +1362,20 @@ body.qnote-select .trow-ping { pointer-events: none; opacity: 0 !important; }
   flex-shrink: 0;
   cursor: pointer;
 }
+.proj-emoji-btn {
+  background: none;
+  border: none;
+  padding: 0 1px;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--t3);
+  opacity: 0.5;
+  transition: opacity .15s;
+  flex-shrink: 0;
+}
+.proj-emoji-btn:hover { opacity: 1; }
+.proj-emoji-btn svg { display: block; }
 .proj-dot-picker {
   display: flex;
   position: fixed;
@@ -2141,10 +2155,15 @@ body.light #proj-dot-picker { box-shadow: 0 8px 28px rgba(0,0,0,.18); }
 /* ── Group section pill: + hint on hover ── */
 button.sec-pill::after {
   content: '+';
-  margin-left: 4px;
+  position: absolute;
+  left: calc(100% + 3px);
+  top: 50%;
+  transform: translateY(-50%);
   opacity: 0;
   font-size: 11px;
   font-weight: 700;
+  color: var(--t3);
+  pointer-events: none;
   transition: opacity .15s;
 }
 button.sec-pill:hover::after { opacity: 0.65; }
@@ -2298,51 +2317,12 @@ body.compact .proj-card      { margin-bottom: 3px; }
 .st-notes-editor ul, .st-notes-editor ol { padding-left: 16px; margin: 2px 0; }
 .st-notes-editor li { margin: 1px 0; }
 
-/* ── Stats bar ── */
-#stats-bar { padding: 28px 16px 0; }
-.stats-bar-inner {
+/* ── Profile bar greeting ── */
+.profile-bar-nameline {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  align-items: baseline;
   gap: 5px;
 }
-.stats-count {
-  font-size: 36px;
-  font-weight: 700;
-  color: var(--t);
-  line-height: 1;
-}
-.stats-desc {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--t3);
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-.stats-period {
-  display: flex;
-  gap: 2px;
-  background: var(--bg3);
-  border-radius: 8px;
-  padding: 3px;
-  margin-top: 2px;
-}
-.spt {
-  background: none;
-  border: none;
-  border-radius: 5px;
-  color: var(--t3);
-  font-family: var(--sans);
-  font-size: 10px;
-  font-weight: 500;
-  padding: 3px 9px;
-  cursor: pointer;
-  transition: all .12s;
-}
-.spt.on    { background: var(--bg4); color: var(--t); }
-.spt:hover:not(.on) { color: var(--t2); }
-
-/* ── Profile bar greeting ── */
 .profile-bar-greeting {
   font-size: 13px;
   font-weight: 400;
@@ -2388,3 +2368,10 @@ body.compact .proj-card      { margin-bottom: 3px; }
 .fontsize-btn:hover  { border-color: var(--b3); color: var(--t); }
 .density-btn.active,
 .fontsize-btn.active { background: var(--ac2); border-color: var(--ac); color: var(--ac3); }
+
+/* ── Confetti animation ── */
+@keyframes confetti-fall {
+  0%   { transform: translateX(0) translateY(0) rotate(0deg); opacity: 1; }
+  75%  { opacity: 1; }
+  100% { transform: translateX(var(--drift)) translateY(100vh) rotate(540deg); opacity: 0; }
+}
