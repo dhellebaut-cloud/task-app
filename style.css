@@ -2099,3 +2099,41 @@ body.light #proj-dot-picker { box-shadow: 0 8px 28px rgba(0,0,0,.18); }
   flex-shrink: 0;
 }
 .sp-add-btn:hover { background: var(--ac); }
+
+/* ── Colour theme swatches ── */
+.ct-swatches {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.ct-swatch {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .12s, border-color .12s;
+  outline: none;
+  flex-shrink: 0;
+}
+.ct-swatch:hover { transform: scale(1.1); }
+.ct-swatch-active {
+  border-color: var(--t);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--t);
+}
+.ct-swatch-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,.6);
+  text-align: center;
+  line-height: 1.2;
+}

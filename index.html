@@ -211,6 +211,9 @@
           <button class="sp-nav-btn" id="sp-nav-backup" onclick="showSettingsSection('backup')">
             <span>💾</span> Backup
           </button>
+          <button class="sp-nav-btn" id="sp-nav-appearance" onclick="showSettingsSection('appearance')">
+            <span>🎨</span> Appearance
+          </button>
         </nav>
       </div>
 
@@ -304,6 +307,13 @@
               <button class="sp-data-btn" onclick="importFromGist()">Restore from Gist</button>
             </div>
           </div>
+        </div>
+
+        <!-- Appearance -->
+        <div class="sp-sec" id="sps-appearance">
+          <div class="sp-sec-title">Colour theme</div>
+          <div class="sp-sec-desc">Choose a colour palette. Works on top of dark and light mode.</div>
+          <div id="sps-color-theme-swatches" class="ct-swatches"></div>
         </div>
 
       </div><!-- /.sp-main -->

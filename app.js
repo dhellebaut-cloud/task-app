@@ -508,7 +508,7 @@ function settingsOverlayClick(e) {
 
 function showSettingsSection(section) {
   activeSettingsSection = section;
-  ['general', 'groups', 'people', 'backup'].forEach(s => {
+  ['general', 'groups', 'people', 'backup', 'appearance'].forEach(s => {
     document.getElementById('sps-' + s).classList.toggle('active', s === section);
     document.getElementById('sp-nav-' + s).classList.toggle('active', s === section);
   });
@@ -519,6 +519,7 @@ function showSettingsSection(section) {
     document.getElementById('ab-pat').value = autoBackup.pat || '';
     updateBackupStatus();
   }
+  if (section === 'appearance') renderColorThemePicker();
 }
 
 const AVATAR_EMOJIS = [
@@ -1861,12 +1862,69 @@ function submitProject() {
 function toggleTheme() {
   const isLight = document.body.classList.toggle('light');
   localStorage.setItem('tasks-app:theme', isLight ? 'light' : 'dark');
+  applyColorTheme(localStorage.getItem('tasks-app:color-theme') || 'default');
 }
 
 function loadTheme() {
   if (localStorage.getItem('tasks-app:theme') === 'light') {
     document.body.classList.add('light');
   }
+}
+
+/* ── Colour themes ── */
+const COLOR_THEMES = [
+  { id: 'default', label: 'Default', dark:  null, light: null },
+  { id: 'blue',  label: 'Blue',
+    dark:  { '--bg': '#0d0f14', '--bg2': '#131720', '--bg3': '#1a1f2c', '--bg4': '#222838', '--ac': '#4f87ef', '--ac2': '#2e62cc', '--ac3': '#90b8f8' },
+    light: { '--bg': '#eff2f8', '--bg2': '#e5eaf4', '--bg3': '#d9e0ef', '--bg4': '#ccd5e8', '--ac': '#2563eb', '--ac2': '#4f83ef', '--ac3': '#1a4abf' } },
+  { id: 'teal',  label: 'Teal',
+    dark:  { '--bg': '#0d1412', '--bg2': '#111d1a', '--bg3': '#172522', '--bg4': '#1e2e2a', '--ac': '#14b8a6', '--ac2': '#0d8a7a', '--ac3': '#5eead4' },
+    light: { '--bg': '#eef4f3', '--bg2': '#e3eeec', '--bg3': '#d6e9e6', '--bg4': '#c8e0dc', '--ac': '#0d9488', '--ac2': '#2bafa3', '--ac3': '#077168' } },
+  { id: 'rose',  label: 'Rose',
+    dark:  { '--bg': '#130d0f', '--bg2': '#1c1215', '--bg3': '#24181c', '--bg4': '#2d1e22', '--ac': '#f43f5e', '--ac2': '#c0183c', '--ac3': '#fda4af' },
+    light: { '--bg': '#f8eff1', '--bg2': '#f1e5e8', '--bg3': '#ead9de', '--bg4': '#e2ccd3', '--ac': '#e11d48', '--ac2': '#f43f5e', '--ac3': '#be123c' } },
+  { id: 'amber', label: 'Amber',
+    dark:  { '--bg': '#130f0a', '--bg2': '#1c160e', '--bg3': '#251d12', '--bg4': '#2e2416', '--ac': '#f59e0b', '--ac2': '#c47d08', '--ac3': '#fcd34d' },
+    light: { '--bg': '#f8f4ec', '--bg2': '#f2eadc', '--bg3': '#ecdfcc', '--bg4': '#e4d3ba', '--ac': '#d97706', '--ac2': '#f59e0b', '--ac3': '#b45309' } },
+  { id: 'mono',  label: 'Mono',
+    dark:  { '--bg': '#0f0f0f', '--bg2': '#161616', '--bg3': '#1e1e1e', '--bg4': '#272727', '--ac': '#94a3b8', '--ac2': '#64748b', '--ac3': '#cbd5e1' },
+    light: { '--bg': '#f1f1f1', '--bg2': '#e8e8e8', '--bg3': '#dcdcdc', '--bg4': '#d0d0d0', '--ac': '#475569', '--ac2': '#64748b', '--ac3': '#334155' } },
+];
+
+function applyColorTheme(id) {
+  const theme = COLOR_THEMES.find(t => t.id === id) || COLOR_THEMES[0];
+  const vars = ['--bg', '--bg2', '--bg3', '--bg4', '--ac', '--ac2', '--ac3'];
+  if (!theme.dark) {
+    vars.forEach(v => document.body.style.removeProperty(v));
+    return;
+  }
+  const isLight = document.body.classList.contains('light');
+  const palette = theme[isLight ? 'light' : 'dark'];
+  Object.entries(palette).forEach(([k, v]) => document.body.style.setProperty(k, v));
+}
+
+function saveColorTheme(id) {
+  localStorage.setItem('tasks-app:color-theme', id);
+  applyColorTheme(id);
+  renderColorThemePicker();
+}
+
+function loadColorTheme() {
+  applyColorTheme(localStorage.getItem('tasks-app:color-theme') || 'default');
+}
+
+function renderColorThemePicker() {
+  const el = document.getElementById('sps-color-theme-swatches');
+  if (!el) return;
+  const current = localStorage.getItem('tasks-app:color-theme') || 'default';
+  el.innerHTML = COLOR_THEMES.map(t => {
+    const accentColor = t.dark ? t.dark['--ac'] : '#7f77dd';
+    const active = t.id === current;
+    return `<button class="ct-swatch${active ? ' ct-swatch-active' : ''}" title="${t.label}"
+      style="background:${accentColor}" onclick="saveColorTheme('${t.id}')">
+      ${t.id === 'default' ? '<span class="ct-swatch-label">Default</span>' : ''}
+    </button>`;
+  }).join('');
 }
 
 function initQnoteSmartPaste() {
@@ -1900,6 +1958,7 @@ function initQnoteSmartPaste() {
 
 function init() {
   loadTheme();
+  loadColorTheme();
   loadFromStorage();
   renderAll();
   initQnoteSmartPaste();
