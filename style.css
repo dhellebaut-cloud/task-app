@@ -2137,3 +2137,254 @@ body.light #proj-dot-picker { box-shadow: 0 8px 28px rgba(0,0,0,.18); }
   text-align: center;
   line-height: 1.2;
 }
+
+/* ── Group section pill: + hint on hover ── */
+button.sec-pill::after {
+  content: '+';
+  margin-left: 4px;
+  opacity: 0;
+  font-size: 11px;
+  font-weight: 700;
+  transition: opacity .15s;
+}
+button.sec-pill:hover::after { opacity: 0.65; }
+
+/* ── Compact density mode ── */
+body.compact .trow           { padding: 5px 11px; }
+body.compact .tc             { margin-bottom: 3px; }
+body.compact .proj-st-row    { padding: 3px 4px; }
+body.compact .proj-card      { margin-bottom: 3px; }
+
+/* ── Task emoji checkmark ── */
+.task-emoji-chk {
+  width: 15px;
+  height: 15px;
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tec-emoji {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+  transition: opacity .1s;
+}
+.tec-check {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  border: 1.5px solid var(--b3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .1s, background .1s, border-color .1s;
+}
+.task-emoji-chk:hover .tec-emoji  { opacity: 0; }
+.task-emoji-chk:hover .tec-check  { opacity: 1; border-color: var(--ac); }
+.task-emoji-chk.on    .tec-emoji  { opacity: 0; }
+.task-emoji-chk.on    .tec-check  { opacity: 1; background: var(--ac); border-color: var(--ac); }
+.task-emoji-chk.on    .tec-check .tick { display: block; }
+
+/* ── Task emoji picker in popup ── */
+.title-emoji-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.title-emoji-row input { flex: 1; }
+.task-emoji-btn {
+  width: 34px;
+  height: 34px;
+  background: var(--bg3);
+  border: .5px solid var(--b2);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  transition: border-color .12s, background .12s;
+  position: relative;
+}
+.task-emoji-btn:not(.has-emoji)::after {
+  content: '☺';
+  font-size: 15px;
+  color: var(--t3);
+}
+.task-emoji-btn:hover { border-color: var(--ac); }
+.task-emoji-btn.has-emoji { border-color: var(--ac2); }
+.task-emoji-picker-dropdown {
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px;
+  background: var(--bg3);
+  border: .5px solid var(--b2);
+  border-radius: 8px;
+  margin-top: 5px;
+  max-height: 130px;
+  overflow-y: auto;
+}
+
+/* ── Subtask drag handle ── */
+.proj-st-drag {
+  opacity: 0;
+  cursor: grab;
+  font-size: 11px;
+  color: var(--t3);
+  padding: 0 2px;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: opacity .12s;
+  user-select: none;
+}
+.proj-st:hover .proj-st-drag { opacity: 0.5; }
+.proj-st-drag:active           { cursor: grabbing; }
+.proj-st.st-drag-over          { border-top: 2px solid var(--ac); margin-top: -2px; }
+
+/* ── Subtask rich-text notes ── */
+.st-note-toolbar {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+.st-tb-btn {
+  background: none;
+  border: .5px solid var(--b2);
+  border-radius: 4px;
+  color: var(--t2);
+  font-family: var(--sans);
+  font-size: 11px;
+  padding: 2px 7px;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: background .12s, color .12s;
+  display: flex;
+  align-items: center;
+}
+.st-tb-btn:hover    { background: var(--bg4); color: var(--t); }
+.st-tb-btn strong   { font-weight: 700; }
+.st-tb-btn em       { font-style: italic; }
+.st-notes-editor {
+  width: 100%;
+  background: var(--bg3);
+  border: .5px solid var(--b2);
+  border-radius: 6px;
+  color: var(--t);
+  font-family: var(--sans);
+  font-size: 12px;
+  padding: 7px 9px;
+  outline: none;
+  min-height: 44px;
+  line-height: 1.55;
+  box-sizing: border-box;
+  word-break: break-word;
+  transition: border-color .15s;
+}
+.st-notes-editor:focus { border-color: var(--ac); }
+.st-notes-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--t3);
+  pointer-events: none;
+}
+.st-notes-editor ul, .st-notes-editor ol { padding-left: 16px; margin: 2px 0; }
+.st-notes-editor li { margin: 1px 0; }
+
+/* ── Stats bar ── */
+#stats-bar { padding: 28px 16px 0; }
+.stats-bar-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.stats-count {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--t);
+  line-height: 1;
+}
+.stats-desc {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--t3);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.stats-period {
+  display: flex;
+  gap: 2px;
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: 3px;
+  margin-top: 2px;
+}
+.spt {
+  background: none;
+  border: none;
+  border-radius: 5px;
+  color: var(--t3);
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: all .12s;
+}
+.spt.on    { background: var(--bg4); color: var(--t); }
+.spt:hover:not(.on) { color: var(--t2); }
+
+/* ── Profile bar greeting ── */
+.profile-bar-greeting {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--t3);
+  letter-spacing: .01em;
+}
+
+/* ── Clear completed button ── */
+.clear-done-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 2px 2px 8px;
+}
+.clear-done-btn {
+  background: none;
+  border: .5px solid #a32d2d;
+  border-radius: 5px;
+  color: #f09595;
+  font-family: var(--sans);
+  font-size: 10px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background .12s;
+}
+.clear-done-btn:hover { background: #a32d2d; color: #fff; }
+
+/* ── Density & font-size option buttons ── */
+.density-options,
+.fontsize-options { display: flex; gap: 6px; margin-top: 8px; }
+.density-btn,
+.fontsize-btn {
+  background: var(--bg3);
+  border: .5px solid var(--b2);
+  border-radius: 6px;
+  color: var(--t2);
+  font-family: var(--sans);
+  font-size: 12px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all .12s;
+}
+.density-btn:hover,
+.fontsize-btn:hover  { border-color: var(--b3); color: var(--t); }
+.density-btn.active,
+.fontsize-btn.active { background: var(--ac2); border-color: var(--ac); color: var(--ac3); }

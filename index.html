@@ -21,7 +21,7 @@
       <!-- Header: title + stat pills -->
       <div class="hdr">
         <div class="hdr-left">
-          <span class="hdr-title">Tasks</span>
+          <span class="hdr-title" id="hdr-title">Tasks</span>
           <button class="cog-btn" onclick="openSettings('general')" title="Settings">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="3"/>
@@ -69,6 +69,9 @@
 
       <!-- Constrained content area -->
       <div class="content-wrap">
+
+        <!-- Stats bar -->
+        <div id="stats-bar"></div>
 
         <!-- Profile + Date bar -->
         <div class="profile-bar" id="profile-bar"></div>
@@ -118,10 +121,17 @@
         </div>
         <div class="pop-body">
 
-          <!-- Title -->
+          <!-- Title + emoji -->
           <div class="pf">
-            <input id="p-title" type="text" placeholder="Task title..."
-              onkeydown="if(event.key==='Enter')submitTask()" />
+            <div class="title-emoji-row">
+              <input id="p-title" type="text" placeholder="Task title..."
+                onkeydown="if(event.key==='Enter')submitTask()" />
+              <button type="button" class="task-emoji-btn" id="task-emoji-btn"
+                      onclick="toggleTaskEmojiPicker(event)" title="Add emoji (optional)">
+                <span id="task-emoji-display"></span>
+              </button>
+            </div>
+            <div id="task-emoji-picker" class="task-emoji-picker-dropdown" style="display:none"></div>
           </div>
 
           <!-- Priority toggle -->
@@ -240,6 +250,18 @@
             <input type="hidden" id="sps-emoji" />
           </div>
 
+          <div class="sp-form-field" style="margin-top:20px">
+            <label class="sp-field-label">App title</label>
+            <input type="text" id="sps-app-title" class="sp-input" placeholder="Tasks" oninput="saveProfile()" maxlength="24" />
+          </div>
+
+          <div class="sp-sec-title" style="margin-top:20px">Stats</div>
+          <div class="sp-sec-desc">Show completed task count above your profile. Choose the time period directly in the stats bar.</div>
+          <div class="ab-toggle-row">
+            <div class="ab-toggle" id="stats-toggle" onclick="toggleStatsEnabled()"><div class="ab-toggle-knob"></div></div>
+            <span class="ab-toggle-label">Show stats bar</span>
+          </div>
+
           <div class="sp-sec-title" style="margin-top:20px">Slack</div>
           <div class="sp-sec-desc">Add a Slack User ID to each person in People to enable direct pinging from tasks.</div>
           <div class="sp-form-field">
@@ -314,6 +336,14 @@
           <div class="sp-sec-title">Colour theme</div>
           <div class="sp-sec-desc">Choose a colour palette. Works on top of dark and light mode.</div>
           <div id="sps-color-theme-swatches" class="ct-swatches"></div>
+
+          <div class="sp-sec-title" style="margin-top:22px">Density</div>
+          <div class="sp-sec-desc">Adjust how compact the task list appears.</div>
+          <div class="density-options" id="density-options"></div>
+
+          <div class="sp-sec-title" style="margin-top:22px">Text size</div>
+          <div class="sp-sec-desc">Scales the entire interface.</div>
+          <div class="fontsize-options" id="fontsize-options"></div>
         </div>
 
       </div><!-- /.sp-main -->

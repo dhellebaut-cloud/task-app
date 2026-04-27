@@ -36,11 +36,14 @@ function renderAll() {
   renderGBar();
   renderList();
   setFilter(activeFilter);
+  renderStatsBar();
   renderProfileBar();
   renderLinksShelf();
   renderProjects();
   document.getElementById('date-bar').textContent =
     new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const titleEl = document.getElementById('hdr-title');
+  if (titleEl) titleEl.textContent = profile.appTitle || 'Tasks';
 }
 
 /* ── Links shelf ── */
@@ -130,13 +133,15 @@ let activeGroup  = 'all';
 let activeFilter = 'open';  // 'open' | 'priority' | 'done' | 'all'
 let dragTaskId   = null;
 let dragGroupId  = null;
+let dragSubtaskId = null;
+let dragSubtaskProjectId = null;
 let gbarAddOpen  = false;
 let selGBarColor = 'purple';
 let editId       = null;    // task id being edited, null when creating
 let nextId       = 1;
 let selSettingsGroupColor  = 'purple';
 let selSettingsPeopleColor = 'purple';
-let profile                = { name: '', emoji: '', slackWebhook: '', slackTeamId: '' };
+let profile                = { name: '', emoji: '', slackWebhook: '', slackTeamId: '', appTitle: '' };
 let autoBackup             = { enabled: false, pat: '', gistId: '', lastBackupTime: '' };
 let people                 = [];
 let links                  = [];
@@ -153,6 +158,8 @@ let expandedSubtaskIds      = new Set();
 let activeSettingsSection  = 'general';
 let prioChecked  = false;    // state of priority checkbox in popup
 let dueSel       = '';       // '' | 'today' | 'week' | 'date'
+let taskEmoji    = '';
+let statsConfig  = { enabled: false, period: 'week' };
 
 /* ── Persistence (localStorage) ── */
 function persist() {
@@ -486,6 +493,8 @@ function openSettings(section) {
   document.getElementById('sps-emoji').value               = profile.emoji      || '';
   document.getElementById('sps-emoji-display').textContent = profile.emoji      || '😀';
   document.getElementById('sps-slack-team').value          = profile.slackTeamId || '';
+  document.getElementById('sps-app-title').value           = profile.appTitle   || '';
+  document.getElementById('stats-toggle').classList.toggle('on', statsConfig.enabled);
   if (activeSettingsSection === 'backup') {
     document.getElementById('ab-toggle').classList.toggle('on', autoBackup.enabled);
     document.getElementById('ab-pat').value = autoBackup.pat || '';
@@ -519,7 +528,11 @@ function showSettingsSection(section) {
     document.getElementById('ab-pat').value = autoBackup.pat || '';
     updateBackupStatus();
   }
-  if (section === 'appearance') renderColorThemePicker();
+  if (section === 'appearance') {
+    renderColorThemePicker();
+    renderDensityOptions();
+    renderFontSizeOptions();
+  }
 }
 
 const AVATAR_EMOJIS = [
@@ -559,8 +572,11 @@ function saveProfile() {
   profile.name        = document.getElementById('sps-name').value.trim();
   profile.emoji       = document.getElementById('sps-emoji').value.trim();
   profile.slackTeamId = document.getElementById('sps-slack-team').value.trim();
+  profile.appTitle    = document.getElementById('sps-app-title').value.trim();
   persist();
   renderProfileBar();
+  const titleEl = document.getElementById('hdr-title');
+  if (titleEl) titleEl.textContent = profile.appTitle || 'Tasks';
 }
 
 /* ── Export / Import ── */
@@ -705,9 +721,11 @@ function renderProfileBar() {
   const el = document.getElementById('profile-bar');
   if (!el) return;
   if (!profile.name && !profile.emoji) { el.innerHTML = ''; return; }
+  const h = new Date().getHours();
+  const greeting = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
   el.innerHTML =
     `${profile.emoji ? `<span class="profile-bar-emoji">${profile.emoji}</span>` : ''}
-     ${profile.name  ? `<span class="profile-bar-name">${esc(profile.name)}</span>` : ''}`;
+     ${profile.name  ? `<span class="profile-bar-greeting">${greeting},</span><span class="profile-bar-name">${esc(profile.name)}</span>` : ''}`;
 }
 
 /* ── Settings: Groups ── */
@@ -871,6 +889,10 @@ function openPopup() {
   editId = null;
   prioChecked = false;
   dueSel = '';
+  taskEmoji = '';
+  const emojiDisplay = document.getElementById('task-emoji-display');
+  if (emojiDisplay) { emojiDisplay.textContent = ''; emojiDisplay.closest('.task-emoji-btn')?.classList.remove('has-emoji'); }
+  document.getElementById('task-emoji-picker')?.setAttribute('style', 'display:none');
 
   wwChecked = false;
   document.getElementById('ww-chk').classList.remove('on');
@@ -931,11 +953,13 @@ function submitTask() {
     created:  new Date().toISOString(),
     workWeek: wwChecked,
     estimate: wwChecked ? { h: parseInt(document.getElementById('p-est-h').value) || 0, m: parseInt(document.getElementById('p-est-m').value) || 0 } : null,
+    emoji:    taskEmoji || '',
   };
 
   if (editId) {
     const existing = tasks.find(t => t.id === editId);
     task.done = existing ? existing.done : false;
+    task.completedAt = existing ? (existing.completedAt || null) : null;
     tasks = tasks.map(t => t.id === editId ? task : t);
   } else {
     tasks.unshift(task);
@@ -960,6 +984,11 @@ function startEdit(id) {
   openPopup();
   editId = id;
   prioChecked = t.priority || false;
+  taskEmoji = t.emoji || '';
+  setTimeout(() => {
+    const disp = document.getElementById('task-emoji-display');
+    if (disp) { disp.textContent = taskEmoji; disp.closest('.task-emoji-btn')?.classList.toggle('has-emoji', !!taskEmoji); }
+  }, 25);
 
   setTimeout(() => {
     document.getElementById('pop-title-text').textContent = 'Edit task';
@@ -1005,7 +1034,13 @@ function delTask(id) {
 /* ── Check / uncheck ── */
 function toggleCheck(id) {
   const t = tasks.find(x => x.id === id);
-  if (t) { t.done = !t.done; persist(); renderList(); }
+  if (t) {
+    t.done = !t.done;
+    t.completedAt = t.done ? new Date().toISOString() : null;
+    persist();
+    renderList();
+    renderStatsBar();
+  }
 }
 
 /* ── Expand / collapse task detail ── */
@@ -1115,8 +1150,7 @@ function toggleNotes(id) {
 
 function toggleDet(id) {
   if (quickNoteSelecting) { selectTaskForNote(id); return; }
-  document.getElementById('det-' + id).classList.toggle('op');
-  document.getElementById('arr-' + id).classList.toggle('op');
+  document.getElementById('det-' + id)?.classList.toggle('op');
 }
 
 /* ── Build a single task card DOM node ── */
@@ -1142,6 +1176,15 @@ function makeCard(t) {
   card.className = 'tc' + (t.done ? ' done' : '');
   card.dataset.id = t.id;
 
+  const chkHtml = t.emoji
+    ? `<div class="task-emoji-chk${t.done ? ' on' : ''}" onclick="event.stopPropagation();toggleCheck(${t.id})" title="${t.done ? 'Mark open' : 'Mark done'}">
+         <span class="tec-emoji">${t.emoji}</span>
+         <div class="tec-check"><div class="tick"></div></div>
+       </div>`
+    : `<div class="chk${t.done ? ' on' : ''}" onclick="event.stopPropagation();toggleCheck(${t.id})">
+         <div class="tick"></div>
+       </div>`;
+
   card.innerHTML = `
     ${taskProgressBar(t, col)}
     <div class="tbar" style="background:${col}" draggable="true"
@@ -1152,10 +1195,7 @@ function makeCard(t) {
     </div>
     <div class="tbody">
       <div class="trow" onclick="toggleDet(${t.id})">
-        <div class="chk${t.done ? ' on' : ''}"
-             onclick="event.stopPropagation();toggleCheck(${t.id})">
-          <div class="tick"></div>
-        </div>
+        ${chkHtml}
         ${t.priority ? '<span class="prio-flag">!</span>' : ''}
         <div class="tmain">
           <div class="ttitle">${esc(t.title)}</div>
@@ -1298,6 +1338,7 @@ function renderList() {
 
   if (!tasks.length) {
     el.innerHTML = `<div class="empty">No tasks yet.</div>`;
+    renderWorkWeekBar();
     return;
   }
 
@@ -1311,7 +1352,15 @@ function renderList() {
       activeFilter === 'priority' ? 'No priority tasks.'      :
                                     'No open tasks.';
     el.appendChild(empty);
+    renderWorkWeekBar();
     return;
+  }
+
+  if (activeFilter === 'done' && tasks.some(t => t.done)) {
+    const row = document.createElement('div');
+    row.className = 'clear-done-row';
+    row.innerHTML = `<button class="clear-done-btn" onclick="clearAllDone()">Clear all completed</button>`;
+    el.appendChild(row);
   }
 
   if (activeGroup === 'all' && groups.length) {
@@ -1498,8 +1547,15 @@ function renderSubtaskRow(projectId, s, projColor) {
       </div>
       <div class="pf">
         <div class="pfl">Notes</div>
-        <textarea class="sp-input" rows="2" placeholder="Notes..."
-                  onchange="updateSubtaskField('${projectId}','${s.id}','notes',this.value)">${esc(s.notes||'')}</textarea>
+        <div class="st-note-toolbar">
+          <button class="st-tb-btn" onmousedown="event.preventDefault()" onclick="stNoteFormat('bold','${s.id}')" title="Bold"><strong>B</strong></button>
+          <button class="st-tb-btn" onmousedown="event.preventDefault()" onclick="stNoteFormat('italic','${s.id}')" title="Italic"><em>I</em></button>
+          <button class="st-tb-btn" onmousedown="event.preventDefault()" onclick="stNoteFormat('insertUnorderedList','${s.id}')" title="Bullet list"><svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><circle cx="2" cy="4" r="1.5"/><rect x="5" y="3" width="10" height="2" rx="1"/><circle cx="2" cy="9" r="1.5"/><rect x="5" y="8" width="10" height="2" rx="1"/><circle cx="2" cy="14" r="1.5"/><rect x="5" y="13" width="10" height="2" rx="1"/></svg></button>
+          <button class="st-tb-btn" onmousedown="event.preventDefault()" onclick="stNoteFormat('strikeThrough','${s.id}')" title="Strikethrough"><s>S</s></button>
+        </div>
+        <div class="st-notes-editor" id="st-notes-${s.id}" contenteditable="true" data-placeholder="Notes..."
+             onkeydown="if((event.metaKey||event.ctrlKey)&&event.key==='b'){event.preventDefault();stNoteFormat('bold','${s.id}');}if((event.metaKey||event.ctrlKey)&&event.key==='i'){event.preventDefault();stNoteFormat('italic','${s.id}');}"
+             onblur="updateSubtaskField('${projectId}','${s.id}','notes',this.innerHTML)">${s.notes ? (/<[a-z]/i.test(s.notes) ? s.notes : esc(s.notes).replace(/\n/g,'<br>')) : ''}</div>
       </div>
       <div class="pf">
         <div class="pfl">Link</div>
@@ -1529,8 +1585,14 @@ function renderSubtaskRow(projectId, s, projColor) {
 
   const chkStyle = projColor ? ` style="${s.done ? `background:${projColor};border-color:${projColor}` : `--proj-chk-hover:${projColor}`}"` : '';
 
-  return `<div class="proj-st${s.done ? ' done' : ''}${editing ? ' editing' : ''}">
+  return `<div class="proj-st${s.done ? ' done' : ''}${editing ? ' editing' : ''}"
+     ondragover="subtaskDragOver(event,'${projectId}','${s.id}')"
+     ondragleave="event.currentTarget.classList.remove('st-drag-over')"
+     ondrop="subtaskDrop(event,'${projectId}','${s.id}')">
     <div class="proj-st-row" onclick="toggleSubtaskExpand('${s.id}')">
+      <div class="proj-st-drag" draggable="true" onclick="event.stopPropagation()"
+           ondragstart="subtaskDragStart(event,'${projectId}','${s.id}')"
+           ondragend="subtaskDragEnd()" title="Reorder">⠿</div>
       <div class="proj-st-check${s.done ? ' on' : ''}"${chkStyle} onclick="event.stopPropagation();toggleSubtaskDone('${projectId}','${s.id}')">
         ${s.done ? `<svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg>` : ''}
       </div>
@@ -1562,9 +1624,14 @@ function toggleSubtaskDone(projectId, subtaskId) {
   const p = projects.find(x => x.id === projectId);
   const s = p?.subtasks.find(x => x.id === subtaskId);
   if (!s) return;
+  const wasAllDone = p.subtasks.length > 0 && p.subtasks.every(x => x.done);
   s.done = !s.done;
+  s.completedAt = s.done ? new Date().toISOString() : null;
+  const isNowAllDone = p.subtasks.length > 0 && p.subtasks.every(x => x.done);
+  if (!wasAllDone && isNowAllDone) launchConfetti();
   persist();
   renderProjects();
+  renderStatsBar();
 }
 
 function toggleSubtaskExpand(subtaskId) {
@@ -1613,9 +1680,7 @@ function toggleTaskWW(id) {
   if (!t.workWeek) t.estimate = null;
   persist();
   renderList();
-  // re-expand the detail that renderList() collapsed
   document.getElementById('det-' + id)?.classList.add('op');
-  document.getElementById('arr-' + id)?.classList.add('op');
 }
 
 function updateTaskEstimate(id, field, val) {
@@ -1956,13 +2021,224 @@ function initQnoteSmartPaste() {
   });
 }
 
+/* ── Clear all done ── */
+function clearAllDone() {
+  if (!confirm('Remove all completed tasks? This cannot be undone.')) return;
+  tasks = tasks.filter(t => !t.done);
+  persist();
+  renderList();
+  renderStatsBar();
+}
+
+/* ── Confetti ── */
+function launchConfetti() {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;width:100%;height:100%';
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx    = canvas.getContext('2d');
+  const colors = ['#7f77dd','#1d9e75','#ef9f27','#d85a30','#f43f5e','#14b8a6','#fcd34d'];
+  const parts  = Array.from({ length: 70 }, () => ({
+    x: Math.random() * canvas.width, y: -10,
+    vx: (Math.random() - 0.5) * 4, vy: Math.random() * 3 + 2,
+    size: Math.random() * 7 + 4, color: colors[Math.floor(Math.random() * colors.length)],
+    angle: Math.random() * Math.PI * 2, spin: (Math.random() - 0.5) * 0.18, alpha: 1,
+  }));
+  let raf;
+  function tick() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = 0;
+    for (const p of parts) {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.angle += p.spin;
+      if (p.y > canvas.height * 0.65) p.alpha -= 0.025;
+      if (p.alpha <= 0) continue;
+      alive++;
+      ctx.save();
+      ctx.translate(p.x, p.y); ctx.rotate(p.angle);
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.55);
+      ctx.restore();
+    }
+    if (alive > 0) raf = requestAnimationFrame(tick);
+    else { canvas.remove(); cancelAnimationFrame(raf); }
+  }
+  tick();
+}
+
+/* ── Stats bar ── */
+function loadStatsConfig() {
+  try {
+    const s = localStorage.getItem('tasks-app:stats');
+    if (s) statsConfig = { ...statsConfig, ...JSON.parse(s) };
+  } catch (_) {}
+}
+function saveStatsConfig() {
+  localStorage.setItem('tasks-app:stats', JSON.stringify(statsConfig));
+}
+function toggleStatsEnabled() {
+  statsConfig.enabled = !statsConfig.enabled;
+  document.getElementById('stats-toggle').classList.toggle('on', statsConfig.enabled);
+  saveStatsConfig();
+  renderStatsBar();
+}
+function setStatsPeriod(p) {
+  statsConfig.period = p;
+  saveStatsConfig();
+  renderStatsBar();
+}
+function renderStatsBar() {
+  const el = document.getElementById('stats-bar');
+  if (!el) return;
+  if (!statsConfig.enabled) { el.innerHTML = ''; return; }
+  const now   = new Date();
+  const today = getToday();
+  const allItems = [
+    ...tasks.filter(t => t.done && t.completedAt),
+    ...projects.flatMap(p => p.subtasks.filter(s => s.done && s.completedAt)),
+  ];
+  let count = 0;
+  if (statsConfig.period === 'day') {
+    count = allItems.filter(x => x.completedAt.slice(0, 10) === today).length;
+  } else if (statsConfig.period === 'week') {
+    const d = new Date(now); d.setDate(d.getDate() - (d.getDay() === 0 ? 6 : d.getDay() - 1)); d.setHours(0,0,0,0);
+    count = allItems.filter(x => new Date(x.completedAt) >= d).length;
+  } else {
+    const d = new Date(now.getFullYear(), now.getMonth(), 1);
+    count = allItems.filter(x => new Date(x.completedAt) >= d).length;
+  }
+  el.innerHTML = `<div class="stats-bar-inner">
+    <span class="stats-count">${count}</span>
+    <span class="stats-desc">completed</span>
+    <div class="stats-period">
+      ${['day','week','month'].map(p =>
+        `<button class="spt${statsConfig.period === p ? ' on' : ''}" onclick="setStatsPeriod('${p}')">${p.charAt(0).toUpperCase() + p.slice(1)}</button>`
+      ).join('')}
+    </div>
+  </div>`;
+}
+
+/* ── Task emoji picker ── */
+const TASK_EMOJIS = [
+  '📝','✅','🎯','🚀','💡','🔥','⭐','🏆','📌','📋',
+  '🔧','🛠️','💼','📊','📈','🎨','🤝','💬','📱','💻',
+  '🌐','📧','📞','🏠','🎉','🌟','💪','🧠','❤️','🔑',
+  '🚗','✈️','🎵','📚','🌈','🦋','🌺','☕','🍎','🎮',
+];
+function toggleTaskEmojiPicker(e) {
+  if (e) e.stopPropagation();
+  const picker = document.getElementById('task-emoji-picker');
+  if (!picker) return;
+  if (picker.style.display !== 'none') { picker.style.display = 'none'; return; }
+  picker.innerHTML = TASK_EMOJIS.map(em =>
+    `<button type="button" class="emoji-opt${taskEmoji === em ? ' sel' : ''}" onclick="pickTaskEmoji('${em}')">${em}</button>`
+  ).join('');
+  picker.style.display = 'flex';
+  setTimeout(() => document.addEventListener('click', taskEmojiOutside), 0);
+}
+function taskEmojiOutside(e) {
+  const picker = document.getElementById('task-emoji-picker');
+  const btn    = document.getElementById('task-emoji-btn');
+  if (picker && !picker.contains(e.target) && btn && !btn.contains(e.target)) {
+    picker.style.display = 'none';
+    document.removeEventListener('click', taskEmojiOutside);
+  }
+}
+function pickTaskEmoji(em) {
+  taskEmoji = taskEmoji === em ? '' : em;
+  const disp = document.getElementById('task-emoji-display');
+  if (disp) { disp.textContent = taskEmoji; disp.closest('.task-emoji-btn')?.classList.toggle('has-emoji', !!taskEmoji); }
+  document.getElementById('task-emoji-picker').style.display = 'none';
+  document.removeEventListener('click', taskEmojiOutside);
+}
+
+/* ── Subtask rich text ── */
+function stNoteFormat(cmd, subtaskId) {
+  const el = document.getElementById('st-notes-' + subtaskId);
+  if (el) { el.focus(); document.execCommand(cmd, false, null); }
+}
+
+/* ── Subtask drag to reorder ── */
+function subtaskDragStart(e, projectId, subtaskId) {
+  dragSubtaskId = subtaskId;
+  dragSubtaskProjectId = projectId;
+  e.dataTransfer.effectAllowed = 'move';
+  e.stopPropagation();
+}
+function subtaskDragEnd() {
+  dragSubtaskId = null;
+  dragSubtaskProjectId = null;
+  document.querySelectorAll('.proj-st').forEach(el => el.classList.remove('st-drag-over'));
+}
+function subtaskDragOver(e, projectId, subtaskId) {
+  if (!dragSubtaskId || dragSubtaskProjectId !== projectId || dragSubtaskId === subtaskId) return;
+  e.preventDefault();
+  e.stopPropagation();
+  document.querySelectorAll('.proj-st').forEach(el => el.classList.remove('st-drag-over'));
+  e.currentTarget.classList.add('st-drag-over');
+}
+function subtaskDrop(e, projectId, subtaskId) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.currentTarget.classList.remove('st-drag-over');
+  if (!dragSubtaskId || dragSubtaskProjectId !== projectId || dragSubtaskId === subtaskId) return;
+  const p = projects.find(x => x.id === projectId);
+  if (!p) return;
+  const fromIdx = p.subtasks.findIndex(x => x.id === dragSubtaskId);
+  const toIdx   = p.subtasks.findIndex(x => x.id === subtaskId);
+  if (fromIdx === -1 || toIdx === -1) return;
+  const [moved] = p.subtasks.splice(fromIdx, 1);
+  p.subtasks.splice(toIdx, 0, moved);
+  dragSubtaskId = null;
+  dragSubtaskProjectId = null;
+  persist();
+  renderProjects();
+}
+
+/* ── Density mode ── */
+function loadDensity()       { applyDensity(localStorage.getItem('tasks-app:density') || 'default'); }
+function applyDensity(mode)  { document.body.classList.toggle('compact', mode === 'compact'); }
+function saveDensity(mode)   { localStorage.setItem('tasks-app:density', mode); applyDensity(mode); renderDensityOptions(); }
+function renderDensityOptions() {
+  const el = document.getElementById('density-options');
+  if (!el) return;
+  const cur = localStorage.getItem('tasks-app:density') || 'default';
+  el.innerHTML = [['default','Default'],['compact','Compact']].map(([id, label]) =>
+    `<button class="density-btn${id === cur ? ' active' : ''}" onclick="saveDensity('${id}')">${label}</button>`
+  ).join('');
+}
+
+/* ── Font size ── */
+function loadFontSize()        { applyFontSize(localStorage.getItem('tasks-app:fontsize') || '100'); }
+function applyFontSize(val)    { document.documentElement.style.zoom = parseInt(val) / 100; }
+function saveFontSize(val)     { localStorage.setItem('tasks-app:fontsize', val); applyFontSize(val); renderFontSizeOptions(); }
+function renderFontSizeOptions() {
+  const el = document.getElementById('fontsize-options');
+  if (!el) return;
+  const cur = localStorage.getItem('tasks-app:fontsize') || '100';
+  el.innerHTML = [['90','S'],['100','M'],['115','L'],['130','XL']].map(([v, label]) =>
+    `<button class="fontsize-btn${v === cur ? ' active' : ''}" onclick="saveFontSize('${v}')">${label}</button>`
+  ).join('');
+}
+
 function init() {
   loadTheme();
   loadColorTheme();
+  loadDensity();
+  loadFontSize();
+  loadStatsConfig();
   loadFromStorage();
   renderAll();
   initQnoteSmartPaste();
   startBackupScheduler();
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (document.getElementById('settings-overlay')?.classList.contains('vis')) { closeSettings(); return; }
+    if (document.getElementById('overlay')?.classList.contains('vis'))          { closePopup();    return; }
+    if (document.getElementById('proj-overlay')?.classList.contains('vis'))     { closeProjectPopup(); return; }
+    if (document.getElementById('qnote-overlay')?.classList.contains('vis'))    { closeQuickNote(); return; }
+  });
 }
 
 init();
