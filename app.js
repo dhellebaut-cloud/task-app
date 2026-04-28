@@ -2280,7 +2280,7 @@ function init() {
   initQnoteSmartPaste();
   startBackupScheduler();
   setInterval(renderProfileBar, 60 * 60 * 1000);
-  scheduleNextQuote();
+  setTimeout(showMotivationalQuote, 1500);
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if (document.getElementById('settings-overlay')?.classList.contains('vis')) { closeSettings(); return; }
