@@ -750,7 +750,7 @@ function scheduleNextQuote() {
 
 function showMotivationalQuote() {
   const el = document.getElementById('profile-bar');
-  if (!el || (!profile.name && !profile.emoji)) { scheduleNextQuote(); return; }
+  if (!el) { scheduleNextQuote(); return; }
   const overlayOpen = ['settings-overlay','overlay','proj-overlay','qnote-overlay']
     .some(id => document.getElementById(id)?.classList.contains('vis'));
   if (overlayOpen) { scheduleNextQuote(); return; }
