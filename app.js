@@ -756,13 +756,14 @@ function showMotivationalQuote() {
   if (overlayOpen) { scheduleNextQuote(); return; }
 
   const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  const textEl = document.getElementById('profile-bar-text') || el;
   showingQuote = true;
-  el.style.transition = 'opacity 0.4s';
-  el.style.opacity = '0';
+  textEl.style.transition = 'opacity 0.4s';
+  textEl.style.opacity = '0';
 
   setTimeout(() => {
-    el.innerHTML = '<span class="profile-quote" id="profile-quote-text"></span>';
-    el.style.opacity = '1';
+    textEl.innerHTML = '<span class="profile-quote" id="profile-quote-text"></span>';
+    textEl.style.opacity = '1';
     const span = document.getElementById('profile-quote-text');
     let i = 0;
     const type = () => {
@@ -773,11 +774,13 @@ function showMotivationalQuote() {
     };
     type();
     setTimeout(() => {
-      el.style.opacity = '0';
+      textEl.style.opacity = '0';
       setTimeout(() => {
+        const h = new Date().getHours();
+        const greeting = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+        textEl.innerHTML = profile.name ? `<span class="profile-bar-greeting">${greeting},</span><span class="profile-bar-name">${esc(profile.name)}</span>` : '';
+        textEl.style.opacity = '1';
         showingQuote = false;
-        renderProfileBar();
-        el.style.opacity = '1';
         scheduleNextQuote();
       }, 400);
     }, 6000);
@@ -793,7 +796,7 @@ function renderProfileBar() {
   const greeting = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
   el.innerHTML =
     `${profile.emoji ? `<span class="profile-bar-emoji">${profile.emoji}</span>` : ''}
-     ${profile.name  ? `<div class="profile-bar-nameline"><span class="profile-bar-greeting">${greeting},</span><span class="profile-bar-name">${esc(profile.name)}</span></div>` : ''}`;
+     <div class="profile-bar-nameline" id="profile-bar-text">${profile.name ? `<span class="profile-bar-greeting">${greeting},</span><span class="profile-bar-name">${esc(profile.name)}</span>` : ''}</div>`;
 }
 
 /* ── Settings: Groups ── */
