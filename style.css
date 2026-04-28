@@ -2315,6 +2315,14 @@ body.compact .proj-card      { margin-bottom: 3px; }
 .st-notes-editor li { margin: 1px 0; }
 
 /* ── Profile bar greeting ── */
+.profile-quote {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--t);
+  letter-spacing: .01em;
+  text-align: center;
+}
+.profile-bar { transition: opacity 0.4s; }
 .profile-bar-nameline {
   display: flex;
   align-items: baseline;

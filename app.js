@@ -714,7 +714,78 @@ function startBackupScheduler() {
   }, 60 * 1000);
 }
 
+/* ── Motivational quotes ── */
+const QUOTES = [
+  "You're on it today.",
+  "Look at you go.",
+  "These tasks don't stand a chance.",
+  "Locked in.",
+  "You're built different.",
+  "Not all heroes wear capes. Some just close tickets.",
+  "Absolutely cooking.",
+  "Tasks fear you.",
+  "You're the main character today.",
+  "This is what peak performance looks like.",
+  "Momentum: acquired.",
+  "No task is safe from you.",
+  "You showed up. That's half of it.",
+  "Efficiency level: scary.",
+  "Getting things done, apparently.",
+  "You're kind of a big deal.",
+  "Brain: engaged. Tasks: doomed.",
+  "Not slacking. Not even a little.",
+  "Quietly getting it done.",
+  "Respectfully, you're killing it.",
+  "Zero tasks were ready for this.",
+  "Your future self is grateful.",
+  "Today's forecast: tasks getting destroyed.",
+  "The tasks had no idea what was coming.",
+];
+let showingQuote = false;
+
+function scheduleNextQuote() {
+  const delay = (5 + Math.random() * 7) * 60 * 1000;
+  setTimeout(showMotivationalQuote, delay);
+}
+
+function showMotivationalQuote() {
+  const el = document.getElementById('profile-bar');
+  if (!el || (!profile.name && !profile.emoji)) { scheduleNextQuote(); return; }
+  const overlayOpen = ['settings-overlay','overlay','proj-overlay','qnote-overlay']
+    .some(id => document.getElementById(id)?.classList.contains('vis'));
+  if (overlayOpen) { scheduleNextQuote(); return; }
+
+  const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  showingQuote = true;
+  el.style.transition = 'opacity 0.4s';
+  el.style.opacity = '0';
+
+  setTimeout(() => {
+    el.innerHTML = '<span class="profile-quote" id="profile-quote-text"></span>';
+    el.style.opacity = '1';
+    const span = document.getElementById('profile-quote-text');
+    let i = 0;
+    const type = () => {
+      if (!span?.isConnected) return;
+      span.textContent = quote.slice(0, i + 1);
+      i++;
+      if (i < quote.length) setTimeout(type, 36);
+    };
+    type();
+    setTimeout(() => {
+      el.style.opacity = '0';
+      setTimeout(() => {
+        showingQuote = false;
+        renderProfileBar();
+        el.style.opacity = '1';
+        scheduleNextQuote();
+      }, 400);
+    }, 6000);
+  }, 400);
+}
+
 function renderProfileBar() {
+  if (showingQuote) return;
   const el = document.getElementById('profile-bar');
   if (!el) return;
   if (!profile.name && !profile.emoji) { el.innerHTML = ''; return; }
@@ -2209,6 +2280,7 @@ function init() {
   initQnoteSmartPaste();
   startBackupScheduler();
   setInterval(renderProfileBar, 60 * 60 * 1000);
+  scheduleNextQuote();
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if (document.getElementById('settings-overlay')?.classList.contains('vis')) { closeSettings(); return; }
