@@ -2316,7 +2316,7 @@ body.compact .proj-card      { margin-bottom: 3px; }
 
 /* ── Profile bar greeting ── */
 .profile-quote {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--t);
   letter-spacing: .01em;
