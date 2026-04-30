@@ -2065,30 +2065,42 @@ function renderColorThemePicker() {
 
 function initQnoteSmartPaste() {
   document.getElementById('qnote-editor').addEventListener('paste', e => {
-    const sel = window.getSelection();
-    if (!sel || sel.isCollapsed) return;
-    const clipText = e.clipboardData?.getData('text/plain')?.trim();
-    if (!clipText) return;
-    let isUrl = false;
-    try { const u = new URL(clipText); isUrl = u.protocol === 'http:' || u.protocol === 'https:'; } catch {}
-    if (!isUrl) return;
     e.preventDefault();
-    const range = sel.getRangeAt(0);
-    const content = range.extractContents();
-    const a = document.createElement('a');
-    a.href = clipText;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    a.style.color = '#f0882a';
-    a.style.textDecoration = 'underline';
-    a.style.textDecorationColor = '#f0882a';
-    a.appendChild(content);
-    range.insertNode(a);
-    const next = document.createRange();
-    next.setStartAfter(a);
-    next.collapse(true);
-    sel.removeAllRanges();
-    sel.addRange(next);
+    const clipText = (e.clipboardData || window.clipboardData).getData('text/plain').trim();
+    if (!clipText) return;
+    const sel = window.getSelection();
+    if (sel && !sel.isCollapsed) {
+      let isUrl = false;
+      try { const u = new URL(clipText); isUrl = u.protocol === 'http:' || u.protocol === 'https:'; } catch {}
+      if (isUrl) {
+        const range = sel.getRangeAt(0);
+        const content = range.extractContents();
+        const a = document.createElement('a');
+        a.href = clipText;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.style.color = '#f0882a';
+        a.style.textDecoration = 'underline';
+        a.style.textDecorationColor = '#f0882a';
+        a.appendChild(content);
+        range.insertNode(a);
+        const next = document.createRange();
+        next.setStartAfter(a);
+        next.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(next);
+        return;
+      }
+    }
+    document.execCommand('insertText', false, clipText);
+  });
+  // Plain-text paste for all other contenteditable elements (task notes, subtask notes)
+  document.addEventListener('paste', e => {
+    if (!e.target.isContentEditable) return;
+    if (e.target.id === 'qnote-editor') return; // handled above
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, text);
   });
 }
 
@@ -2264,6 +2276,13 @@ function renderDensityOptions() {
 function loadFontSize()        { applyFontSize(localStorage.getItem('tasks-app:fontsize') || '100'); }
 function applyFontSize(val)    { document.documentElement.style.zoom = parseInt(val) / 100; }
 function saveFontSize(val)     { localStorage.setItem('tasks-app:fontsize', val); applyFontSize(val); renderFontSizeOptions(); }
+function adjustFontSize(dir) {
+  const sizes = ['85', '100', '115', '130'];
+  const cur = localStorage.getItem('tasks-app:fontsize') || '100';
+  const idx = sizes.indexOf(cur);
+  const next = sizes[Math.max(0, Math.min(sizes.length - 1, idx + dir))];
+  if (next !== cur) saveFontSize(next);
+}
 function renderFontSizeOptions() {
   const el = document.getElementById('fontsize-options');
   if (!el) return;
@@ -2285,6 +2304,8 @@ function init() {
   setInterval(renderProfileBar, 60 * 60 * 1000);
   setTimeout(showMotivationalQuote, 1500);
   document.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && (e.key === '+' || e.key === '=')) { e.preventDefault(); adjustFontSize(1);  return; }
+    if ((e.metaKey || e.ctrlKey) &&  e.key === '-')                   { e.preventDefault(); adjustFontSize(-1); return; }
     if (e.key !== 'Escape') return;
     if (document.getElementById('settings-overlay')?.classList.contains('vis')) { closeSettings(); return; }
     if (document.getElementById('overlay')?.classList.contains('vis'))          { closePopup();    return; }
