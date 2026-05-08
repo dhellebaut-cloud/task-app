@@ -921,7 +921,8 @@ button.sec-pill { cursor: pointer; position: relative; transition: background .1
   color: var(--t3);
   pointer-events: none;
 }
-#p-notes a { color: #f0882a; text-decoration: underline; }
+#p-notes * { color: inherit !important; }
+#p-notes a { color: #f0882a !important; text-decoration: underline; }
 
 .pfl {
   font-size: 10px;
@@ -2422,6 +2423,7 @@ body.compact .proj-card      { margin-bottom: 3px; }
   color: var(--t3);
   pointer-events: none;
 }
+.st-notes-editor * { color: inherit !important; }
 .st-notes-editor ul, .st-notes-editor ol { padding-left: 16px; margin: 2px 0; }
 .st-notes-editor li { margin: 1px 0; }
 
