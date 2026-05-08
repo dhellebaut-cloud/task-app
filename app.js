@@ -2307,6 +2307,7 @@ function init() {
     if ((e.metaKey || e.ctrlKey) && (e.key === '+' || e.key === '=')) { e.preventDefault(); adjustFontSize(1);  return; }
     if ((e.metaKey || e.ctrlKey) &&  e.key === '-')                   { e.preventDefault(); adjustFontSize(-1); return; }
     if (e.key !== 'Escape') return;
+    if (document.getElementById('fr-overlay')?.classList.contains('vis'))       { closeFeatureRequest(); return; }
     if (document.getElementById('settings-overlay')?.classList.contains('vis')) { closeSettings(); return; }
     if (document.getElementById('overlay')?.classList.contains('vis'))          { closePopup();    return; }
     if (document.getElementById('proj-overlay')?.classList.contains('vis'))     { closeProjectPopup(); return; }
@@ -2314,10 +2315,52 @@ function init() {
   });
 }
 
+/* ── Feature request ── */
+function openFeatureRequest() {
+  document.getElementById('fr-overlay').classList.add('vis');
+  document.getElementById('fr-name').focus();
+}
+function closeFeatureRequest() {
+  document.getElementById('fr-overlay').classList.remove('vis');
+  document.getElementById('fr-status').textContent = '';
+  document.getElementById('fr-status').className = '';
+}
+async function submitFeatureRequest(e) {
+  e.preventDefault();
+  const form    = document.getElementById('fr-form');
+  const btn     = form.querySelector('.fr-submit');
+  const status  = document.getElementById('fr-status');
+  const ENDPOINT = 'https://formspree.io/f/xqendjwq';
+
+  btn.disabled = true;
+  status.className = '';
+  status.textContent = 'Sending…';
+
+  try {
+    const res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: new FormData(form),
+    });
+    if (res.ok) {
+      status.className = 'fr-ok';
+      status.textContent = 'Sent! Thanks.';
+      form.reset();
+      setTimeout(closeFeatureRequest, 1800);
+    } else {
+      throw new Error('server error');
+    }
+  } catch {
+    status.className = 'fr-err';
+    status.textContent = 'Something went wrong — try again.';
+    btn.disabled = false;
+  }
+}
+
 init();
 
 document.addEventListener('wheel', function(e) {
-  const overlays = ['overlay', 'proj-overlay', 'settings-overlay', 'qnote-overlay', 'ping-overlay'];
+  const overlays = ['overlay', 'proj-overlay', 'settings-overlay', 'qnote-overlay', 'ping-overlay', 'fr-overlay'];
   if (overlays.some(id => document.getElementById(id)?.classList.contains('vis'))) return;
   const scrollArea = document.getElementById('scroll-area');
   if (!scrollArea) return;
