@@ -187,7 +187,7 @@ function loadFromStorage() {
     if (t)  tasks   = JSON.parse(t);
     if (g)  groups  = JSON.parse(g);
     if (pe) people  = JSON.parse(pe);
-    if (pr) profile = JSON.parse(pr);
+    if (pr) profile = { ...profile, ...JSON.parse(pr) };
     if (li) links    = JSON.parse(li);
     const pj = localStorage.getItem('tasks-app:projects');
     if (pj) projects = JSON.parse(pj);
