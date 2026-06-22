@@ -287,6 +287,17 @@
             <label class="sp-field-label">Team ID</label>
             <input type="text" id="sps-slack-team" class="sp-input" placeholder="T0123ABCD — from your Slack workspace URL" oninput="saveProfile()" />
           </div>
+
+          <div class="sp-sec-title" style="margin-top:20px">Sunny</div>
+          <div class="sp-sec-desc">Send tasks to your Sunny agent in Slack. Requires a bot token with <code>chat:write</code> scope and the Sunny channel ID.</div>
+          <div class="sp-form-field">
+            <label class="sp-field-label">Bot Token</label>
+            <input type="password" id="sps-sunny-token" class="sp-input" placeholder="xoxb-..." oninput="saveProfile()" />
+          </div>
+          <div class="sp-form-field">
+            <label class="sp-field-label">Sunny Channel ID</label>
+            <input type="text" id="sps-sunny-channel" class="sp-input" placeholder="D0AR2D3H7QB" oninput="saveProfile()" />
+          </div>
         </div>
 
         <!-- Groups -->

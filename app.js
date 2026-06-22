@@ -140,7 +140,7 @@ let editId       = null;    // task id being edited, null when creating
 let nextId       = 1;
 let selSettingsGroupColor  = 'purple';
 let selSettingsPeopleColor = 'purple';
-let profile                = { name: '', emoji: '', slackWebhook: '', slackTeamId: '', appTitle: '' };
+let profile                = { name: '', emoji: '', slackWebhook: '', slackTeamId: '', appTitle: '', sunnyToken: '', sunnyChannelId: '' };
 let autoBackup             = { enabled: false, pat: '', gistId: '', lastBackupTime: '' };
 let people                 = [];
 let links                  = [];
@@ -491,6 +491,8 @@ function openSettings(section) {
   document.getElementById('sps-emoji').value               = profile.emoji      || '';
   document.getElementById('sps-emoji-display').textContent = profile.emoji      || '😀';
   document.getElementById('sps-slack-team').value          = profile.slackTeamId || '';
+  document.getElementById('sps-sunny-token').value         = profile.sunnyToken || '';
+  document.getElementById('sps-sunny-channel').value       = profile.sunnyChannelId || '';
   document.getElementById('sps-app-title').value           = profile.appTitle   || '';
   if (activeSettingsSection === 'backup') {
     document.getElementById('ab-toggle').classList.toggle('on', autoBackup.enabled);
@@ -568,8 +570,10 @@ function pickEmoji(e) {
 function saveProfile() {
   profile.name        = document.getElementById('sps-name').value.trim();
   profile.emoji       = document.getElementById('sps-emoji').value.trim();
-  profile.slackTeamId = document.getElementById('sps-slack-team').value.trim();
-  profile.appTitle    = document.getElementById('sps-app-title').value.trim();
+  profile.slackTeamId    = document.getElementById('sps-slack-team').value.trim();
+  profile.appTitle       = document.getElementById('sps-app-title').value.trim();
+  profile.sunnyToken     = document.getElementById('sps-sunny-token').value.trim();
+  profile.sunnyChannelId = document.getElementById('sps-sunny-channel').value.trim();
   persist();
   renderProfileBar();
   const titleEl = document.getElementById('hdr-title');
@@ -1240,7 +1244,8 @@ function makeCard(t) {
   const col        = taskColor(t);
   const due        = dueTxt(t.due);
   const g          = groups.find(g => g.id === t.group);
-  const pingPerson = t.from ? people.find(p => p.name.toLowerCase() === t.from.toLowerCase()) : null;
+  const pingPerson  = t.from ? people.find(p => p.name.toLowerCase() === t.from.toLowerCase()) : null;
+  const hasSunny    = !!(profile.sunnyToken && profile.sunnyChannelId);
 
   const card = document.createElement('div');
   card.className = 'tc' + (t.done ? ' done' : '');
@@ -1271,7 +1276,7 @@ function makeCard(t) {
           <div class="ttitle">${esc(t.title)}</div>
           ${due ? `<div class="tdue ${due.cls}">${due.label}</div>` : ''}
         </div>
-        ${pingPerson ? `<button class="trow-ping" onclick="event.stopPropagation();pingPerson('${pingPerson.id}')">Ping ${esc(pingPerson.name)}</button>` : ''}
+        ${hasSunny ? `<button class="trow-ping trow-sunny" onclick="event.stopPropagation();sendToSunny(${t.id})" title="Send to Sunny">☀️</button>` : ''}
         <button class="trow-del" onclick="event.stopPropagation();delTask(${t.id})" title="Delete">Delete</button>
       </div>
       <div class="tdet" id="det-${t.id}">
@@ -1500,6 +1505,37 @@ function pingPerson(personId) {
     ? `slack://user?team=${team}&id=${p.slackId}`
     : `slack://user?id=${p.slackId}`;
   window.location.href = url;
+}
+
+/* ── Send to Sunny ── */
+async function sendToSunny(taskId) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  if (!profile.sunnyToken || !profile.sunnyChannelId) return;
+
+  const btn = document.querySelector(`.tc[data-id="${taskId}"] .trow-sunny`);
+  if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+
+  const lines = [`*📋 New task from ${esc(profile.name || 'the Task App')}*`, `*${t.title}*`];
+  if (t.due) lines.push(`📅 Due: ${new Date(t.due).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}`);
+  if (t.from) lines.push(`👤 From: ${t.from}`);
+  if (t.estimate?.h || t.estimate?.m) lines.push(`⏱ Estimate: ${t.estimate.h || 0}h ${t.estimate.m || 0}m`);
+  if (t.priority) lines.push(`🔴 Priority task`);
+  if (t.notes) lines.push(`📝 Notes: ${t.notes}`);
+
+  try {
+    const res = await fetch('https://slack.com/api/chat.postMessage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + profile.sunnyToken },
+      body: JSON.stringify({ channel: profile.sunnyChannelId, text: lines.join('\n') })
+    });
+    const data = await res.json();
+    if (btn) { btn.textContent = data.ok ? '✅' : '❌'; btn.disabled = false; }
+    setTimeout(() => { if (btn) btn.textContent = '☀️'; }, 2000);
+  } catch {
+    if (btn) { btn.textContent = '❌'; btn.disabled = false; }
+    setTimeout(() => { if (btn) btn.textContent = '☀️'; }, 2000);
+  }
 }
 
 /* ── Projects ── */
