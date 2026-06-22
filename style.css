@@ -708,6 +708,9 @@ button.sec-pill { cursor: pointer; position: relative; transition: background .1
 }
 .tc:hover .trow-ping       { border-color: #2a5a8a; color: #6ab0f5; }
 .tc:hover .trow-ping:hover { background: #1a3a5e; border-color: #6ab0f5; color: #6ab0f5; }
+.trow-sunny { display: none; }
+body.sunny-enabled .trow-sunny { display: inline-flex; }
+body.sunny-enabled .tc:hover .trow-sunny { border-color: #5a4a1a; color: inherit; }
 
 
 /* ── Task detail (expandable) ── */

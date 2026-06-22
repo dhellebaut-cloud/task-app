@@ -577,6 +577,7 @@ function saveProfile() {
     profile.sunnyChannelId = document.getElementById('sps-sunny-channel').value.trim();
   }
   persist();
+  updateSunnyVisibility();
   renderProfileBar();
   const titleEl = document.getElementById('hdr-title');
   if (titleEl) titleEl.textContent = profile.appTitle || 'Tasks';
@@ -1247,7 +1248,6 @@ function makeCard(t) {
   const due        = dueTxt(t.due);
   const g          = groups.find(g => g.id === t.group);
   const pingPerson  = t.from ? people.find(p => p.name.toLowerCase() === t.from.toLowerCase()) : null;
-  const hasSunny    = !!(profile.sunnyToken && profile.sunnyChannelId);
 
   const card = document.createElement('div');
   card.className = 'tc' + (t.done ? ' done' : '');
@@ -1278,7 +1278,7 @@ function makeCard(t) {
           <div class="ttitle">${esc(t.title)}</div>
           ${due ? `<div class="tdue ${due.cls}">${due.label}</div>` : ''}
         </div>
-        ${hasSunny ? `<button class="trow-ping trow-sunny" onclick="event.stopPropagation();sendToSunny(${t.id})" title="Send to Sunny">☀️</button>` : ''}
+        <button class="trow-ping trow-sunny" onclick="event.stopPropagation();sendToSunny(${t.id})" title="Send to Sunny">☀️</button>
         <button class="trow-del" onclick="event.stopPropagation();delTask(${t.id})" title="Delete">Delete</button>
       </div>
       <div class="tdet" id="det-${t.id}">
@@ -1510,6 +1510,9 @@ function pingPerson(personId) {
 }
 
 /* ── Send to Sunny ── */
+function updateSunnyVisibility() {
+  document.body.classList.toggle('sunny-enabled', !!(profile.sunnyToken && profile.sunnyChannelId));
+}
 async function sendToSunny(taskId) {
   const t = tasks.find(x => x.id === taskId);
   if (!t) return;
@@ -2336,6 +2339,7 @@ function init() {
   loadDensity();
   loadFontSize();
   loadFromStorage();
+  updateSunnyVisibility();
   renderAll();
   initQnoteSmartPaste();
   startBackupScheduler();
