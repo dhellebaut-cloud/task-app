@@ -572,8 +572,10 @@ function saveProfile() {
   profile.emoji       = document.getElementById('sps-emoji').value.trim();
   profile.slackTeamId    = document.getElementById('sps-slack-team').value.trim();
   profile.appTitle       = document.getElementById('sps-app-title').value.trim();
-  profile.sunnyToken     = document.getElementById('sps-sunny-token').value.trim();
-  profile.sunnyChannelId = document.getElementById('sps-sunny-channel').value.trim();
+  if (document.getElementById('settings-overlay').classList.contains('vis')) {
+    profile.sunnyToken     = document.getElementById('sps-sunny-token').value.trim();
+    profile.sunnyChannelId = document.getElementById('sps-sunny-channel').value.trim();
+  }
   persist();
   renderProfileBar();
   const titleEl = document.getElementById('hdr-title');
