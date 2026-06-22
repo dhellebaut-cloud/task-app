@@ -140,8 +140,9 @@ let editId       = null;    // task id being edited, null when creating
 let nextId       = 1;
 let selSettingsGroupColor  = 'purple';
 let selSettingsPeopleColor = 'purple';
-let profile                = { name: '', emoji: '', slackWebhook: '', slackTeamId: '', appTitle: '', sunnyToken: '', sunnyChannelId: '' };
+let profile                = { name: '', emoji: '', slackWebhook: '', slackTeamId: '', appTitle: '' };
 let autoBackup             = { enabled: false, pat: '', gistId: '', lastBackupTime: '' };
+let sunnyConfig            = { token: '', channelId: '' };
 let people                 = [];
 let links                  = [];
 let linksExpanded          = false;
@@ -176,6 +177,10 @@ function persistAutoBackup() {
   try { localStorage.setItem('tasks-app:autobackup', JSON.stringify(autoBackup)); } catch (_) {}
 }
 
+function persistSunny() {
+  try { localStorage.setItem('tasks-app:sunny', JSON.stringify(sunnyConfig)); } catch (_) {}
+}
+
 function loadFromStorage() {
   try {
     const t = localStorage.getItem('tasks-app:tasks');
@@ -187,7 +192,16 @@ function loadFromStorage() {
     if (t)  tasks   = JSON.parse(t);
     if (g)  groups  = JSON.parse(g);
     if (pe) people  = JSON.parse(pe);
-    if (pr) profile = { ...profile, ...JSON.parse(pr) };
+    if (pr) {
+      const parsed = JSON.parse(pr);
+      profile = { ...profile, ...parsed };
+      // migrate sunnyToken/sunnyChannelId out of profile if stored there previously
+      if (parsed.sunnyToken && !localStorage.getItem('tasks-app:sunny')) {
+        sunnyConfig = { token: parsed.sunnyToken, channelId: parsed.sunnyChannelId || '' };
+      }
+    }
+    const sc = localStorage.getItem('tasks-app:sunny');
+    if (sc) sunnyConfig = { ...sunnyConfig, ...JSON.parse(sc) };
     if (li) links    = JSON.parse(li);
     const pj = localStorage.getItem('tasks-app:projects');
     if (pj) projects = JSON.parse(pj);
@@ -491,8 +505,8 @@ function openSettings(section) {
   document.getElementById('sps-emoji').value               = profile.emoji      || '';
   document.getElementById('sps-emoji-display').textContent = profile.emoji      || '😀';
   document.getElementById('sps-slack-team').value          = profile.slackTeamId || '';
-  document.getElementById('sps-sunny-token').value         = profile.sunnyToken || '';
-  document.getElementById('sps-sunny-channel').value       = profile.sunnyChannelId || '';
+  document.getElementById('sps-sunny-token').value         = sunnyConfig.token || '';
+  document.getElementById('sps-sunny-channel').value       = sunnyConfig.channelId || '';
   document.getElementById('sps-app-title').value           = profile.appTitle   || '';
   if (activeSettingsSection === 'backup') {
     document.getElementById('ab-toggle').classList.toggle('on', autoBackup.enabled);
@@ -572,10 +586,6 @@ function saveProfile() {
   profile.emoji       = document.getElementById('sps-emoji').value.trim();
   profile.slackTeamId    = document.getElementById('sps-slack-team').value.trim();
   profile.appTitle       = document.getElementById('sps-app-title').value.trim();
-  if (document.getElementById('settings-overlay').classList.contains('vis')) {
-    profile.sunnyToken     = document.getElementById('sps-sunny-token').value.trim();
-    profile.sunnyChannelId = document.getElementById('sps-sunny-channel').value.trim();
-  }
   persist();
   updateSunnyVisibility();
   renderProfileBar();
@@ -1510,13 +1520,20 @@ function pingPerson(personId) {
 }
 
 /* ── Send to Sunny ── */
+function saveSunny() {
+  sunnyConfig.token     = document.getElementById('sps-sunny-token').value.trim();
+  sunnyConfig.channelId = document.getElementById('sps-sunny-channel').value.trim();
+  persistSunny();
+  updateSunnyVisibility();
+}
+
 function updateSunnyVisibility() {
-  document.body.classList.toggle('sunny-enabled', !!(profile.sunnyToken && profile.sunnyChannelId));
+  document.body.classList.toggle('sunny-enabled', !!(sunnyConfig.token && sunnyConfig.channelId));
 }
 async function sendToSunny(taskId) {
   const t = tasks.find(x => x.id === taskId);
   if (!t) return;
-  if (!profile.sunnyToken || !profile.sunnyChannelId) return;
+  if (!sunnyConfig.token || !sunnyConfig.channelId) return;
 
   const btn = document.querySelector(`.tc[data-id="${taskId}"] .trow-sunny`);
   if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
@@ -1531,8 +1548,8 @@ async function sendToSunny(taskId) {
   try {
     const res = await fetch('https://slack.com/api/chat.postMessage', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + profile.sunnyToken },
-      body: JSON.stringify({ channel: profile.sunnyChannelId, text: lines.join('\n') })
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sunnyConfig.token },
+      body: JSON.stringify({ channel: sunnyConfig.channelId, text: lines.join('\n') })
     });
     const data = await res.json();
     if (btn) { btn.textContent = data.ok ? '✅' : '❌'; btn.disabled = false; }
