@@ -38,6 +38,8 @@
   --pill-done-text:   #5dcaa5;
   --pill-all-bg:      #132033;
   --pill-all-text:    #6ab0f5;
+  --pill-today-bg:    #3a2d5c;
+  --pill-today-text:  #c7b5f5;
 
   --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
@@ -64,6 +66,8 @@ body.light {
   --pill-done-text: #15653e;
   --pill-all-bg:    #cde3ff;
   --pill-all-text:  #164d8f;
+  --pill-today-bg:  #e6dcfa;
+  --pill-today-text: #5a3aa0;
 }
 
 body {
@@ -225,6 +229,7 @@ body {
 .pill-priority { background: var(--pill-prio-bg);  color: var(--pill-prio-text); }
 .pill-done     { background: var(--pill-done-bg);  color: var(--pill-done-text); }
 .pill-all      { background: var(--pill-all-bg);   color: var(--pill-all-text); }
+.pill-today    { background: var(--pill-today-bg); color: var(--pill-today-text); }
 
 /* ── Date bar ── */
 .profile-bar {

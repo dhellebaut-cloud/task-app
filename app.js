@@ -129,7 +129,7 @@ const COLS = [
 let tasks        = [];
 let groups       = [];
 let activeGroup  = 'all';
-let activeFilter = 'open';  // 'open' | 'priority' | 'done' | 'all'
+let activeFilter = 'open';  // 'open' | 'priority' | 'done' | 'all' | 'today'
 let dragTaskId   = null;
 let dragGroupId  = null;
 let dragSubtaskId = null;
@@ -309,7 +309,7 @@ function renderColorPicker(elId, cur, onPick) {
 /* ── Pill filter ── */
 function setFilter(f) {
   activeFilter = f;
-  ['priority', 'open', 'done', 'all'].forEach(x => {
+  ['today', 'priority', 'open', 'done', 'all'].forEach(x => {
     document.getElementById('pill-' + x).classList.toggle('active', activeFilter === x);
   });
   renderList();
@@ -1339,6 +1339,7 @@ function updateCounts() {
   document.getElementById('cnt-done').textContent     = tasks.filter(t => t.done).length      + projects.filter(p => p.archived).length;
   document.getElementById('cnt-priority').textContent = tasks.filter(t => t.priority && !t.done).length;
   document.getElementById('cnt-all').textContent      = tasks.length + projects.length;
+  document.getElementById('cnt-today').textContent    = tasks.filter(t => t.due === getToday() && !t.done).length;
 }
 
 /* ── Drag and drop ── */
@@ -1420,6 +1421,7 @@ function renderList() {
     if (activeFilter === 'open')     return !t.done;
     if (activeFilter === 'done')     return t.done;
     if (activeFilter === 'priority') return t.priority && !t.done;
+    if (activeFilter === 'today')    return t.due === getToday() && !t.done;
     return true;
   });
 
@@ -1437,6 +1439,7 @@ function renderList() {
     empty.textContent =
       activeFilter === 'done'     ? 'No completed tasks yet.' :
       activeFilter === 'priority' ? 'No priority tasks.'      :
+      activeFilter === 'today'    ? 'No tasks due today.'     :
                                     'No open tasks.';
     el.appendChild(empty);
     renderWorkWeekBar();
